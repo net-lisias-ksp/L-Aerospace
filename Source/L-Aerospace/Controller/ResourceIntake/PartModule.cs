@@ -277,13 +277,10 @@ namespace L_Aerospace.Controller.ResourceIntake
 			if (!this.active) return;
 
 			this.intakeEnabled = true;
-			foreach (ModuleResourceIntake m in this.targets) if (m.isEnabled && !m.intakeEnabled)
-			{
-				m.Activate();
-				this.setupTarget(m);
-			}
 
+			this.ActivateIntakes();
 			this.ActivateGeneratorsIfNeeded();
+
 			this.setupMe();
 		}
 
@@ -293,12 +290,8 @@ namespace L_Aerospace.Controller.ResourceIntake
 			if (!this.active) return;
 
 			this.intakeEnabled = false;
-			foreach (ModuleResourceIntake m in this.targets) if (m.isEnabled && m.intakeEnabled)
-			{
-				m.Deactivate();
-				this.setupTarget(m);
-			}
 
+			this.DeactivateIntakes();
 			this.DeactivateGeneratorsIfNeeded();
 			this.setupMe();
 		}
@@ -330,23 +323,45 @@ namespace L_Aerospace.Controller.ResourceIntake
 			}
 		}
 
+		private void ActivateIntakes()
+		{
+			foreach (ModuleResourceIntake m in this.targets) if (m.isEnabled && !m.intakeEnabled)
+			{
+				m.Activate();
+				this.setupTarget(m);
+			}
+		}
+
+		private void DeactivateIntakes()
+		{
+			foreach (ModuleResourceIntake m in this.targets) if (m.isEnabled && m.intakeEnabled)
+			{
+				m.Deactivate();
+				this.setupTarget(m);
+			}
+		}
+
 		private void ActivateGeneratorsIfNeeded()
 		{
 			if (!this.controlGenerators) return;
 
-			foreach (ModuleGenerator mg in this.generators)
-				if (this.lastKnownGeneratorState[mg] && this.intakeEnabled)
+			foreach (ModuleGenerator mg in this.generators) if (mg.isEnabled && !mg.generatorIsActive)
+			{ 
+				Log.dbg("Gen On {0} {1} {2} {3}", mg.moduleName, this.lastKnownGeneratorState[mg], mg.generatorIsActive, this.intakeEnabled);
+				if (!mg.generatorIsActive && this.lastKnownGeneratorState[mg] && this.intakeEnabled)
 					mg.Activate();
+			}
 		}
 
 		private void DeactivateGeneratorsIfNeeded()
 		{
 			if (!this.controlGenerators) return;
 
-			foreach (ModuleGenerator mg in this.generators)
+			foreach (ModuleGenerator mg in this.generators) if (mg.isEnabled)
 			{
+				Log.dbg("Gen Off {0} {1} {2} {3}", mg.moduleName, this.lastKnownGeneratorState[mg], mg.generatorIsActive, this.intakeEnabled);
 				this.lastKnownGeneratorState[mg] = mg.generatorIsActive;
-				if (!mg.generatorIsActive && !this.intakeEnabled)
+				if (mg.generatorIsActive && !this.intakeEnabled)
 					mg.Shutdown();
 			}
 		}
