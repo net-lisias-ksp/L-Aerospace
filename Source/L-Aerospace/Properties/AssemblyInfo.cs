@@ -5,12 +5,12 @@ using System.Runtime.CompilerServices;
 // Change them to the values specific to your project.
 
 [assembly: AssemblyTitle("L AeroSpace")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("<TBD>")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("")]
-[assembly: AssemblyCopyright("${AuthorCopyright}")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCompany(L_Aerospace.LegalMamboJambo.Company)]
+[assembly: AssemblyProduct(L_Aerospace.LegalMamboJambo.Product)]
+[assembly: AssemblyCopyright(L_Aerospace.LegalMamboJambo.Copyright)]
+[assembly: AssemblyTrademark(L_Aerospace.LegalMamboJambo.Trademark)]
 [assembly: AssemblyCulture("")]
 
 // The assembly version has the format "{Major}.{Minor}.{Build}.{Revision}".
