@@ -3,12 +3,12 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{5D6D7090-176D-4EBB-9AB9-C7337CBA6404}</ProjectGuid>
+    <ProjectGuid>{8AFF7DCA-87CE-47C8-9266-A4E28EE7B0DB}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <BaseIntermediateOutputPath>..\..\obj\LAerospace</BaseIntermediateOutputPath>
-    <RootNamespace>L_Aerospace</RootNamespace>
-    <AssemblyName>L_Aerospace</AssemblyName>
+    <RootNamespace>KerbalCrewMass</RootNamespace>
+    <AssemblyName>KerbalCrewMass</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <BaseIntermediateOutputPath>..\..\obj\KerbalCrewMass</BaseIntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,11 +30,11 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\..\..\..\LIB\managed\1.4.3\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\LIB\managed\1.4.1\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>..\..\..\..\..\..\LIB\managed\1.4.3\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\LIB\managed\1.4.1\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="KSPe">
@@ -44,30 +44,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Startup.cs" />
-    <Compile Include="Log.cs" />
-    <Compile Include="Properties\LegalMamboJambo.cs" />
-    <Compile Include="Lib\Common.cs" />
-    <Compile Include="Properties\Version.cs">
-      <DependentUpon>Version.tt</DependentUpon>
-    </Compile>
-    <Compile Include="Controller\ResourceIntake\PartModule.cs" />
-    <Compile Include="Controller\ControlSurface\PartModule.cs" />
-    <Compile Include="Controller\AbstractController.cs" />
-    <Compile Include="Globals.cs" />
-    <Compile Include="ModuleManagerSupport.cs" />
+    <Compile Include="PartModule.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Lib\" />
-    <Folder Include="Controller\" />
-    <Folder Include="Controller\ResourceIntake\" />
-    <Folder Include="Controller\ControlSurface\" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Properties\Version.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Version.cs</LastGenOutput>
-    </None>
+    <ProjectReference Include="..\L-Aerospace\L-Aerospace.csproj">
+      <Project>{5D6D7090-176D-4EBB-9AB9-C7337CBA6404}</Project>
+      <Name>L-Aerospace</Name>
+      <Private>False</Private>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
