@@ -1,6 +1,6 @@
 ﻿/*
 	This file is part of L Aerospace
-		© 2018-2025 LisiasT
+		© 2018-2026 LisiasT : http://lisias.net <support@lisias.net>
 
 	THIS FILE is licensed to you under:
 		* WTFPL - http://www.wtfpl.net

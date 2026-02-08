@@ -1,6 +1,6 @@
 ﻿/*
 	This file is part of L Aerospace
-		© 2018-2025 LisiasT
+		© 2018-2026 LisiasT : http://lisias.net <support@lisias.net> : http://lisias.net <support@lisias.net>
 
 	L Aerospace is double licensed, as follows:
 		* SKL 1.0 : https://ksp.lisias.net/SKL-1_0.txt

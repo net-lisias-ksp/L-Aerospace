@@ -1,6 +1,6 @@
 ﻿/*
 	This file is part of L Aerospace
-		© 2018-2025 LisiasT
+		© 2018-2026 LisiasT : http://lisias.net <support@lisias.net>
 
 	L Aerospace is double licensed, as follows:
 		* SKL 1.0 : https://ksp.lisias.net/SKL-1_0.txt
@@ -24,7 +24,7 @@ namespace L_Aerospace
 	public static class LegalMamboJambo
 	{
 		public const string Company = "L Aerospace/KSP Division";
-		public const string Copyright = "Copyright © 2018-2025 LisiasT";
+		public const string Copyright = "Copyright © 2018-2026 LisiasT";
 		public const string Product = "L Aerospace";
 		public const string Trademark = "L Aerospace™ LisiasT";
 	}
