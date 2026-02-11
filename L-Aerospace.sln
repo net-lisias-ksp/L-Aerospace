@@ -9,6 +9,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Features", "Features", "{A7
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KerbalCrewMass", "Source\KerbalCrewMass\KerbalCrewMass.csproj", "{8AFF7DCA-87CE-47C8-9266-A4E28EE7B0DB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KerbalHeatPump", "Source\KerbalHeatPump\KerbalHeatPump.csproj", "{3610DDA7-0B42-4445-9FAF-199413DACFD5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Source\Tests\Tests.csproj", "{91AC78C7-D411-4927-91E1-C518F431B071}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +27,14 @@ Global
 		{8AFF7DCA-87CE-47C8-9266-A4E28EE7B0DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8AFF7DCA-87CE-47C8-9266-A4E28EE7B0DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8AFF7DCA-87CE-47C8-9266-A4E28EE7B0DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3610DDA7-0B42-4445-9FAF-199413DACFD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3610DDA7-0B42-4445-9FAF-199413DACFD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3610DDA7-0B42-4445-9FAF-199413DACFD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3610DDA7-0B42-4445-9FAF-199413DACFD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91AC78C7-D411-4927-91E1-C518F431B071}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91AC78C7-D411-4927-91E1-C518F431B071}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91AC78C7-D411-4927-91E1-C518F431B071}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91AC78C7-D411-4927-91E1-C518F431B071}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -32,5 +44,6 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8AFF7DCA-87CE-47C8-9266-A4E28EE7B0DB} = {A75CA9B8-4BE3-4399-B902-048529994857}
+		{3610DDA7-0B42-4445-9FAF-199413DACFD5} = {A75CA9B8-4BE3-4399-B902-048529994857}
 	EndGlobalSection
 EndGlobal
