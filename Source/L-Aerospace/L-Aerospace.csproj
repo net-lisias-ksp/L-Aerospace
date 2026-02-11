@@ -56,6 +56,7 @@
     <Compile Include="Controller\AbstractController.cs" />
     <Compile Include="Globals.cs" />
     <Compile Include="ModuleManagerSupport.cs" />
+    <Compile Include="Lib\UI.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Lib\" />

@@ -19,6 +19,7 @@
 	along with L Aerospace. If not, see <https://www.gnu.org/licenses/>.
 */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 using L_Aerospace.Lib;
@@ -72,6 +73,18 @@ namespace L_Aerospace.Controller
 			this.updateDelegate();
 		}
 
+		protected void ExecuteAsCoroutine(Action action)
+		{
+			this.StartCoroutine(this.coroutine(action));
+		}
+
 		protected void dummyUpdate() {}
+
+		private IEnumerator coroutine(Action action, int delayFrames = 0)
+		{
+			if (--delayFrames > 0) yield return null;
+			action.Invoke();
+			yield break;
+		}
 	}
 }
