@@ -29,7 +29,7 @@ namespace L_Aerospace
 		{
 			List<string> tags = new List<string>();
 
-			if (checkForCrewMass())		tags.Add("L_AEROSPACE-CREW-MASS");
+			if (checkForCrewMass())		tags.Add("L-AEROSPACE_CREW-MASS");
 			return tags.ToArray();
 		}
 
@@ -40,6 +40,8 @@ namespace L_Aerospace
 				Log.info("Kerbal Crew Mass detected with the value: {0} tons", PhysicsGlobals.KerbalCrewMass);
 
 			return
+					KSPe.Util.SystemTools.Type.Exists.By("L_Aerospace.KerbalCrewMass", "Controller")
+				&&
 					PhysicsGlobals.KerbalCrewMass > 0.0f
 				&&
 					(KSPe.Util.KSP.Version.Current < KSPe.Util.KSP.Version.FindByVersion(1,11,0))

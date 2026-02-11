@@ -43,11 +43,6 @@ namespace L_Aerospace
 			log.warn(msg, @params);
 		}
 
-		internal static void force(string v, object text)
-		{
-			throw new NotImplementedException();
-		}
-
 		public static void detail(string msg, params object[] @params)
 		{
 			log.detail(msg, @params);
