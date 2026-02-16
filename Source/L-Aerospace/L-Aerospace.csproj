@@ -51,18 +51,17 @@
     <Compile Include="Properties\Version.cs">
       <DependentUpon>Version.tt</DependentUpon>
     </Compile>
-    <Compile Include="Controller\ResourceIntake\PartModule.cs" />
-    <Compile Include="Controller\ControlSurface\PartModule.cs" />
     <Compile Include="Controller\AbstractController.cs" />
     <Compile Include="Globals.cs" />
     <Compile Include="ModuleManagerSupport.cs" />
     <Compile Include="Lib\UI.cs" />
+    <Compile Include="Controller\AnimateGeneric.cs" />
+    <Compile Include="Controller\ControlSurface.cs" />
+    <Compile Include="Controller\ResourceIntake.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Lib\" />
     <Folder Include="Controller\" />
-    <Folder Include="Controller\ResourceIntake\" />
-    <Folder Include="Controller\ControlSurface\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\Version.tt">
