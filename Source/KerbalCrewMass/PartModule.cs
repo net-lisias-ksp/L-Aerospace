@@ -42,14 +42,14 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 
 		public override void OnAwake()
 		{
-			Log.dbg("OnAwake {0}:{1:X}", this.name, this.part.GetInstanceID());
+			Log.dbg("{0}:OnAwake", this.ID);
 			base.OnAwake();
 			this.active = Globals.Instance.KerbalCrewMass;
 		}
 
 		public override void OnStart(StartState state)
 		{
-			Log.dbg("OnStart {0}:{1:X} {2} {3}", this.name, this.part.GetInstanceID(), state, this.active);
+			Log.dbg("{0}:OnStart {0} {1}", this.ID, state, this.active);
 			base.OnStart(state);
 			{
 				BaseField bf = this.Fields["active"];
@@ -60,32 +60,32 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 
 		public override void OnCopy(PartModule fromModule)
 		{
-			Log.dbg("OnCopy {0}:{1:X} from {2:X}", this.name, this.part.GetInstanceID(), fromModule.part.GetInstanceID());
+			Log.dbg("{0}:OnCopy from {1:X}", this.ID, fromModule.part.GetInstanceID());
 			base.OnCopy(fromModule);
 		}
 
 		public override void OnLoad(ConfigNode node)
 		{
-			Log.dbg("OnLoad {0}:{1:X} {2}", this.name, this.part.GetInstanceID(), null != node);
+			Log.dbg("{0}:OnLoad {1}", this.ID, null != node);
 			base.OnLoad(node);
 			this.CalculateCurrentMassSurplus();
 		}
 
 		public override void OnSave(ConfigNode node)
 		{
-			Log.dbg("OnSave {0}:{1:X} {2}", this.name, this.part.GetInstanceID(), null != node);
+			Log.dbg("{0}:OnSave {1}", this.ID, null != node);
 			base.OnSave(node);
 		}
 
 		public override void OnInitialize()
 		{
-			Log.dbg("OnInitialize {0}:{1:X}", this.name, this.part.GetInstanceID());
+			Log.dbg("{0}:OnInitialize", this.ID);
 			base.OnInitialize();
 		}
 
 		public override void OnActive()
 		{
-			Log.dbg("OnActive {0}:{1:X}", this.name, this.part.GetInstanceID());
+			Log.dbg("{0}:OnActive", this.ID);
 			base.OnActive();
 			this.init();
 		}
@@ -96,7 +96,7 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 
 		public override void OnInactive()
 		{
-			Log.dbg("OnInactive {0}:{1:X}", this.name, this.part.GetInstanceID());
+			Log.dbg("{0}:OnInactive", this.ID);
 			base.OnInactive();
 			this.deinit();
 		}
@@ -107,12 +107,12 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 		{
 			if (null == this.part.protoModuleCrew)
 			{
-				Log.dbg("ERROR: null == this.part.protoModuleCrew for {0}:{1:X} as {2}", this.name, this.part.GetInstanceID(), this.massSurplus);
+				Log.dbg("ERROR: null == this.part.protoModuleCrew for {0} as {2}", this.ID, this.massSurplus);
 				return;
 			}
 			// Switching Count with CrewCapacity saves a multiply to -1.
 			this.massSurplus = (this.part.protoModuleCrew.Count - this.part.CrewCapacity) * PhysicsGlobals.KerbalCrewMass;
-			Log.dbg("Recalculate mass surplus for {0}:{1:X} as {2} {3} = {4}", this.name, this.part.GetInstanceID(), this.part.protoModuleCrew.Count, this.part.CrewCapacity, this.massSurplus);
+			Log.dbg("Recalculate mass surplus for {0} as {2} {3} = {4}", this.ID, this.part.protoModuleCrew.Count, this.part.CrewCapacity, this.massSurplus);
 		}
 
 		private void OnVesselCrewWasModified(Vessel data) => this.CalculateCurrentMassSurplus();
@@ -130,6 +130,8 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 		float IPartMassModifier.GetModuleMass(float defaultMass, ModifierStagingSituation sit) => this.massSurplus;
 		ModifierChangeWhen IPartMassModifier.GetModuleMassChangeWhen() => ModifierChangeWhen.FIXED;
 
+		private String __ID = null;
+		public String ID => __ID??(__ID = String.Format("{0}:{1:X}", this.name, this.part.GetInstanceID()));
 		private static readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalCrewMass>("L_Aerospace.Kerbal.Kerbal.CrewMass", "Module", 0);
 	}
 } } }

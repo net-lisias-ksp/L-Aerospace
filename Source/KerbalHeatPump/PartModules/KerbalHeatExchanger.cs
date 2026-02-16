@@ -52,7 +52,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		public override void OnAwake()
 		{
-			Log.dbg("OnAwake {0}", this.ID);
+			Log.dbg("{0}:OnAwake", this.ID);
 			base.OnAwake();
 			{
 				BaseField field = Fields["thresholdRatio"];
@@ -63,7 +63,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		public override void OnCopy(PartModule fromModule)
 		{
-			Log.dbg("OnCopy {0} from {1:X}", this.ID, fromModule.part.GetInstanceID());
+			Log.dbg("{0}:OnCopy from {1:X}", this.ID, fromModule.part.GetInstanceID());
 			base.OnCopy(fromModule);
 			this.heatExchangeEnabled = (fromModule as KerbalHeatExchanger).heatExchangeEnabled;
 			this.maxEnergyTransfer = (fromModule as KerbalHeatExchanger).maxEnergyTransfer;
@@ -74,7 +74,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		public override void OnLoad(ConfigNode node)
 		{
 			base.OnLoad(node);
-			Log.dbg("OnLoad {0} {1}", this.ID, null != node);
+			Log.dbg("{0}:OnLoad {1}", this.ID, null != node);
 
 			if (null == this.part.partInfo) return;
 			this.resources = ResourceDef.readList(this.part.partInfo.partConfig, this.GetType().Name, this.ID).ToArray();

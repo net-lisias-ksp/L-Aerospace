@@ -31,7 +31,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		protected override void OnStart()
 		{
-			Log.dbg("OnStart {0}:{1:X} {2}", this.name, this.GetInstanceID(), this.enabled);
+			Log.dbg("{0}:OnStart {1}", this.ID, this.enabled);
 			base.OnStart();
 			this.populate();
 			this.enabled = this.Enabled;
@@ -39,14 +39,14 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		public override void OnGoOnRails()
 		{
-			Log.dbg("OnGoOnRails {0}:{1:X} {2}", this.name, this.GetInstanceID(), this.enabled);
+			Log.dbg("{0}:OnGoOnRails {1}", this.ID, this.enabled);
 			base.OnGoOnRails();
 			this.list.Clear();
 		}
 
 		public override void OnGoOffRails()
 		{
-			Log.dbg("OnGoOffRails {0}:{1:X} {2}", this.name, this.GetInstanceID(), this.enabled);
+			Log.dbg("{0}OnGoOffRails", this.ID);
 			base.OnGoOffRails();
 			this.populate();
 			this.enabled = this.Enabled;
@@ -62,7 +62,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		public override void OnUnloadVessel()
 		{
-			Log.dbg("OnUnloadVessel {0}:{1:X}", this.name, this.vessel.GetInstanceID());
+			Log.dbg("{0}:OnUnloadVessel", this.ID);
 			base.OnUnloadVessel();
 			GameEvents.onEditorShipModified.Remove(this.OnEditorShipModified);
 			GameEvents.onVesselChange.Remove(this.OnVesselChange);
@@ -98,6 +98,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				if (null == m) continue;
 				this.list.Add(m);
 			}
+			Log.dbg("{0}:populate Found {1} Heat Sinkers.", this.ID, this.list.Count);
 		}
 
 		internal static Controller GetModule(Vessel vessel)
@@ -107,5 +108,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				return vessel.vesselModules[i] as Controller;
 			throw new EntryPointNotFoundException(typeof(Controller).FullName);
 		}
+		private String __ID = null;
+		public String ID => __ID??(__ID = String.Format("{0}:{1:X}", this.name, this.vessel.GetInstanceID()));
+		private static readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalHeatExchanger>("L_Aerospace.Kerbal.HeatPump", "Controller", 0);
 	}
 } } }

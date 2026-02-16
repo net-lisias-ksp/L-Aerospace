@@ -42,13 +42,13 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		public override void OnAwake()
 		{
-			Log.dbg("OnAwake {0}", this.ID);
+			Log.dbg("{0}:OnAwake", this.ID);
 			base.OnAwake();
 		}
 
 		public override void OnCopy(PartModule fromModule)
 		{
-			Log.dbg("OnCopy {0} from {1:X}", this.ID, fromModule.part.GetInstanceID());
+			Log.dbg("{0}:OnCopy from {1:X}", this.ID, fromModule.part.GetInstanceID());
 			base.OnCopy(fromModule);
 			this.resources = (fromModule as ModuleKerbalHeatSink).resources;
 			this.intakes = (fromModule as ModuleKerbalHeatSink).intakes;
@@ -56,7 +56,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		public override void OnLoad(ConfigNode node)
 		{
-			Log.dbg("OnLoad {0} {1}", this.ID, null != node);
+			Log.dbg("{0}:OnLoad {1}", this.ID, null != node);
 			base.OnLoad(node);
 
 			if (null == this.part.partInfo) return;
@@ -96,20 +96,20 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		public override void OnSave(ConfigNode node)
 		{
-			Log.dbg("OnSave {0} {1}", this.ID, null != node);
+			Log.dbg("{0}:OnSave {1}", this.ID, null != node);
 			base.OnSave(node);
 		}
 
 		public override void OnStart(StartState state)
 		{
-			Log.dbg("OnStart {0} {1} {2}", this.ID, state, this.enabled);
+			Log.dbg("{0}:OnStart {1} {2}", this.ID, state, this.enabled);
 			base.OnStart(state);
 			this.Active &= StartState.Editor != state;
 		}
 
 		public override void OnInitialize()
 		{
-			Log.dbg("OnInitialize {0}", this.ID);
+			Log.dbg("{0}:OnInitialize", this.ID);
 			base.OnInitialize();
 			if (
 					this.Active
@@ -123,7 +123,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		public override void OnActive()
 		{
-			Log.dbg("OnActive {0}", this.ID);
+			Log.dbg("{0}:OnActive", this.ID);
 			base.OnActive();
 		}
 
@@ -133,7 +133,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		public override void OnInactive()
 		{
-			Log.dbg("OnInactive {0}}", this.ID);
+			Log.dbg("{0}:OnInactive ", this.ID);
 			base.OnInactive();
 		}
 
@@ -160,6 +160,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			}
 
 			this.part.thermalInternalFlux += energy;
+			Log.dbg("{0}:SinkHeat enegySunk={1} ; part.thermalInternalFlux = {2} ; part.temperature = {3}", this.ID, energy, this.part.thermalInternalFlux, this.part.temperature);
 			return energy;
 		}
 
