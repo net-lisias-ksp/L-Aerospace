@@ -35,8 +35,9 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		}
 
 		private Controller vesselModule;
-		private ResourceDef[] resources = new ResourceDef[0];
-		private Dictionary<string, ModuleResourceIntake[]> intakes = new Dictionary<string, ModuleResourceIntake[]>();
+
+		[KSPField (isPersistant = true)]
+		protected double maxEnergyTransfer = 7500;
 
 		#region KSP Life Cycle
 
@@ -50,48 +51,14 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			Log.dbg("{0}:OnCopy from {1:X}", this.ID, fromModule.part.GetInstanceID());
 			base.OnCopy(fromModule);
-			this.resources = (fromModule as ModuleKerbalHeatSink).resources;
-			this.intakes = (fromModule as ModuleKerbalHeatSink).intakes;
+			this.maxEnergyTransfer = (fromModule as KerbalHeatSink).maxEnergyTransfer;
 		}
 
 		public override void OnLoad(ConfigNode node)
 		{
 			Log.dbg("{0}:OnLoad {1}", this.ID, null != node);
 			base.OnLoad(node);
-
-			if (null == this.part.partInfo) return;
-
-			{ 
-				this.resources = ResourceDef.readList(this.part.partInfo.partConfig, this.GetType().Name, this.ID).ToArray();
-				if (0 == this.resources.Length)
-					Log.warn("{0}:OnLoad No Resources found! Deactivating myself...", this.ID);
-				else
-					Log.dbg("{0}:OnLoad Found {1} Resources", this.ID, this.resources.Length);
-			}
-			this.Active = 0 != this.resources.Length;
-
-			{
-				int count = 0;
-				List<ModuleResourceIntake> all = this.part.FindModulesImplementing<ModuleResourceIntake>();
-				for (int i = 0; i < this.resources.Length; ++i)
-				{
-					string resourceName = this.resources[i].name;
-					List<ModuleResourceIntake> intakes = new List<ModuleResourceIntake>(this.part.Modules.Count);
-					for (int j = 0; j < all.Count; ++j)
-						if (resourceName.Equals(all[j].resourceName))
-							intakes.Add(all[j]);
-					ModuleResourceIntake[] intakeArray = intakes.ToArray();
-					count += intakeArray.Length;
-					this.intakes[resourceName] = intakeArray;
-				}
-
-				if (0 == count)
-					Log.warn("{0}:OnLoad No Resource Intakes found! Deactivating myself...", this.ID);
-				else
-					Log.dbg("{0}:OnLoad Found {1} Resource Intakes", this.ID, count);
-
-				this.Active &= 0 != count;
-			}
+			this.Active = this.maxEnergyTransfer > 0;
 		}
 
 		public override void OnSave(ConfigNode node)
@@ -104,7 +71,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			Log.dbg("{0}:OnStart {1} {2}", this.ID, state, this.enabled);
 			base.OnStart(state);
-			this.Active &= StartState.Editor != state;
+			this.Active &= state > StartState.Editor;
 		}
 
 		public override void OnInitialize()
@@ -137,27 +104,31 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			base.OnInactive();
 		}
 
+		private string _getInfo = null;
+		public override string GetInfo()
+		{
+			if (!this.Active) return "Disabled.";
+			if (null == this._getInfo)
+			{
+				this._getInfo = string.Format(
+							"Max Energy Transfer : {0}kW"
+						, this.maxEnergyTransfer
+					);
+			}
+			return this._getInfo;
+		}
+
 		#endregion
 
 		public double SinkHeat(double energy)
 		{
 			if (!this.Active) return 0;
 
+			double maxEnergyToSink = this.maxEnergyTransfer * TimeWarp.fixedDeltaTime;
+			energy = Math.Min(energy, maxEnergyToSink);
+
 			double kelvins = energy / this.part.thermalMass;
-			if (this.part.temperature + kelvins >= this.part.maxTemp) return 0;
-
-			for (int i = 0; i < this.resources.Length; ++i)
-			{
-				ResourceDef resource = this.resources[i];
-				ModuleResourceIntake[] intakes = this.intakes[resource.name];
-				double demand = energy * resource.rate;
-				double flow = 0;
-				for (int j = 0; j < intakes.Length; ++j)
-					flow += intakes[j].airFlow;
-				double supply = Math.Min(demand, flow);
-
-				//energy *= supply / demand;
-			}
+			if (this.part.skinTemperature + kelvins >= this.part.skinMaxTemp) return 0;
 
 			this.part.thermalInternalFlux += energy;
 			Log.dbg("{0}:SinkHeat enegySunk={1} ; part.thermalInternalFlux = {2} ; part.temperature = {3}", this.ID, energy, this.part.thermalInternalFlux, this.part.temperature);

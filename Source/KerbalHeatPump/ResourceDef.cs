@@ -27,34 +27,60 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 {
 	internal struct ResourceDef
 	{
-		internal readonly string name;
-		internal readonly double rate;
 		internal readonly int id;
+		internal readonly string name;
+		internal readonly double ratio;
+		internal PartResourceDefinition def;
+		internal readonly double hspu;	// Joules per Unit per °K
+		internal readonly double hsp;	// Joules per Kg per °K
 
-		internal  ResourceDef(string name, double rate) : this()
+		internal ResourceDef(string name, double ratio) : this()
 		{
+			PartResourceDefinition r = PartResourceLibrary.Instance.GetDefinition(name);
+			this.id = r.id;
 			this.name = name;
-			this.rate = rate;
-			this.id = PartResourceLibrary.Instance.GetDefinition(name).id;
+			this.ratio = ratio;
+			this.def = r;
+
+			// density : Tons per Unit
+			// hsp : Joules per (Kg * °K) J/(kg*K)
+
+			this.hsp = 1000 * r.density * r.specificHeatCapacity; // HSP per kG, not per U.
+			this.hspu = r.specificHeatCapacity; // HSP per U, not per kG.
 		}
 
-		internal static ResourceDef from(ConfigNode node)
+		public override string ToString() =>
+				this.ratio > 0
+					? string.Format("ResourceDef:{{id:{0} name:{1} ratio:{2} density:{3} hsp:{4}}}", this.id, this.name, this.ratio, this.def.density, this.def.specificHeatCapacity)
+					: string.Format("ResourceDef:{{id:{0} name:{1} density:{2} hsp:{3} hspu:{4}}}", this.id, this.name, this.def.density, this.def.specificHeatCapacity, this.hspu)
+				;
+
+		internal static ResourceDef from(ConfigNode node) => from(ConfigNodeWithSteroids.from(node));
+		internal static ResourceDef from(ConfigNodeWithSteroids node)
 		{
 			return new ResourceDef(
 						node.GetValue("name"),
-						Double.Parse(node.GetValue("rate"))
+						node.GetValue<double>("ratio", 0d)
+					);;
+		}
+
+		internal static ResourceDef from(ResourceRatio r)
+		{
+			return new ResourceDef(
+						r.ResourceName,
+						r.Ratio
 					);
-			}
+		}
 
 		internal ConfigNode toConfigNode()
 		{
 			ConfigNode r = new ConfigNode("RESOURCE");
 			r.AddValue("name", this.name);
-			r.AddValue("rate", this.rate);
+			r.AddValue("ratio", this.ratio);
 			return r;
 		}
 
-		internal static List<ResourceDef> readList(ConfigNode partConfig, string name, string owner)
+		internal static List<ResourceDef> readList(ConfigNode partConfig, string name)
 		{
 			ConfigNode moduleConfig = null;
 			{

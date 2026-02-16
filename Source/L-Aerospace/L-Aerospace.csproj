@@ -55,6 +55,7 @@
     <Compile Include="Globals.cs" />
     <Compile Include="ModuleManagerSupport.cs" />
     <Compile Include="Lib\UI.cs" />
+    <Compile Include="Lib\Physics.cs" />
     <Compile Include="Controller\AnimateGeneric.cs" />
     <Compile Include="Controller\ControlSurface.cs" />
     <Compile Include="Controller\ResourceIntake.cs" />

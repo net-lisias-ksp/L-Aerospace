@@ -77,12 +77,18 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			Log.dbg("{0}:OnLoad {1}", this.ID, null != node);
 
 			if (null == this.part.partInfo) return;
-			this.resources = ResourceDef.readList(this.part.partInfo.partConfig, this.GetType().Name, this.ID).ToArray();
+			this.resources = ResourceDef.readList(this.part.partInfo.partConfig, this.GetType().Name).ToArray();
 			if (0 == this.resources.Length)
 				Log.warn("{0}:OnLoad No Resources found! Deactivating myself...", this.ID);
 			else
 				Log.dbg("{0}:OnLoad Found {1} Resources", this.ID, this.resources.Length);
 			this.Active = 0 != this.resources.Length;
+#if DEBUG
+			{ 
+				for (int i = 0; i < this.resources.Length; ++i)
+					Log.dbg("{0}:OnLoad {1}", this.ID, this.resources[i]);
+			}
+#endif
 		}
 
 		public override void OnSave(ConfigNode node)
@@ -95,7 +101,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			Log.dbg("{0}:OnStart {1} {2}", this.ID, state, this.enabled);
 			base.OnStart(state);
-			this.Active &= StartState.Editor != state;
+			this.Active &= state > StartState.Editor;
 		}
 
 		public override void OnInitialize()
@@ -129,46 +135,113 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			base.OnInactive();
 		}
 
+		private string _getInfo = null;
+		public override string GetInfo()
+		{
+			if (!this.Active) return "Disabled.";
+			if (null == this._getInfo)
+			{
+				BaseField field = Fields["thresholdRatio"];
+				field.OnValueModified += this.OnThresholdRatioChanged;
+				UI_FloatRange range = (UI_FloatRange)field.uiControlEditor;
+
+				this._getInfo = string.Format(
+							"Max Energy Transfer : {0}kW\n"
+							+ "Heat Exchage Theshold : from {1:F2}°K to {2:F2}°K"
+						, this.maxEnergyTransfer
+						, range.minValue * this.part.maxTemp
+						, range.maxValue * this.part.maxTemp
+					);
+				if (this.resources.Length > 0)
+				{
+					this._getInfo += "\n<b>Consumables</b>";
+					for (int i = 0; i < this.resources.Length; ++i)
+					{
+						if (this.resources[i].ratio > 0)
+							this._getInfo += string.Format(
+									"\n\t{0} : {1} {2}"
+								, this.resources[i].name
+								, this.resources[i].ratio*this.resources[i].def.density*1000
+								, "kG/J" 
+							);
+						if (this.resources[i].hsp > 0)
+							this._getInfo += string.Format(
+									"\n\t{0} : {1} {2}"
+								, this.resources[i].name
+								, this.resources[i].hsp
+								, "J/(kG°K)" 
+							);
+					}
+				}
+
+			}
+			return this._getInfo;
+		}
+
 		public override void OnFixedUpdate()
 		{
 			base.OnFixedUpdate();
 			if (!this.heatExchangeEnabled) return;
 
-			double maxTempToSink = this.part.temperature - (this.part.maxTemp * ((double)this.thresholdRatio));
-			Log.dbg("{0}:OnFixedUpdate maxTempToSink={1}", this.ID, maxTempToSink);
-			if (maxTempToSink < 1) return;
+			// pegar a temperatura da parte, multiplicar pela thermal mass.
+			double energyCurrent =  this.part.thermalMass * this.part.temperature;
+			double energyGoal = this.part.thermalMass * (this.part.maxTemp * ((double)this.thresholdRatio));
 
-			double totalEnergy = this.part.thermalMass * maxTempToSink;
-			double energyToSink = Math.Min(totalEnergy, this.maxEnergyTransfer) * TimeWarp.fixedDeltaTime;
-			Log.dbg("{0}:OnFixedUpdate totalEnergy={1} ; energyToSink={2}", this.ID, totalEnergy, energyToSink);
+			double maxEnergyToSink = energyCurrent - energyGoal;
+			Log.dbg("{0}:OnFixedUpdate maxEnergyToSink={1}", this.ID, maxEnergyToSink);
+			if (maxEnergyToSink < 1) return;
 
+			double energyToSink = Math.Min(maxEnergyToSink, this.maxEnergyTransfer) * TimeWarp.fixedDeltaTime;
+
+			// Only the coolant in the part is accountable for thermal transfer!
+			double energyAvailable = 0;
+			for (int i = 0; i < this.resources.Length; ++i)
+				energyAvailable += this.resources[i].hspu * this.part.Resources.Get(resources[i].id).amount;
+			energyAvailable *= TimeWarp.fixedDeltaTime;
+			if (energyAvailable < Lib.Physics.CUTOFF)
+			{
+				Log.dbg("{0}:OnFixedUpdate {1} NOT ENOUGH OUT OF COOLANTS!", this.ID);
+				// Any already consumed resouces are lost.
+				this.heatExchangeEnabled = false;
+				//Lib.UI.PostScreenWarning(Localizer.Format("#SOMETHING", this.vessel.vesselName, this.resources[i].name));
+				Lib.UI.PostScreenWarning(string.Format("Vessel {0} run out of Coolants. Heat Exchanger is disabled!", this.vessel.vesselName));
+				return;
+			}
+
+			Log.dbg("{0}:OnFixedUpdate maxEnergyToSink={1} ; energyToSink={2} ; energyAvailable={3}", this.ID, maxEnergyToSink, energyToSink, energyAvailable);
+
+			double energy = Math.Min(energyToSink, energyAvailable);
+
+			double energySinkable = 0;
 			for (int i = 0; i < this.resources.Length; ++i)
 			{
-				double toConsume = energyToSink * this.resources[i].rate ;
-				double consumed = this.part.RequestResource(this.resources[i].id, toConsume, ResourceFlowMode.ALL_VESSEL);
-				if ((toConsume - consumed) > 0.001)
+				ResourceDef r = this.resources[i];
+
+				double demand = energy * r.ratio * energyToSink / energyAvailable;
+				double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
+				if (consumed < Lib.Physics.CUTOFF && demand > Lib.Physics.CUTOFF)
 				{
-					Log.dbg("{0}:OnFixedUpdate {1} NOT ENOUGH!: toConsume={2} ; consumed={3}", this.ID, this.resources[i].name, toConsume, consumed);
+					Log.dbg("{0}:OnFixedUpdate {1} NOT ENOUGH!: demand={2} ; consumed={3}", this.ID, r.name, demand, consumed);
 					// Any already consumed resouces are lost.
 					this.heatExchangeEnabled = false;
 					//Lib.UI.PostScreenWarning(Localizer.Format("#SOMETHING", this.vessel.vesselName, this.resources[i].name));
-					Lib.UI.PostScreenWarning(string.Format("Vessel {0} run out of {1}. Heat Exchanger is disabled!", this.vessel.vesselName, this.resources[i].name));
+					Lib.UI.PostScreenWarning(string.Format("Vessel {0} run out of {1}. Heat Exchanger is disabled!", this.vessel.vesselName, r.name));
 					return;
 				}
-				double ratio = consumed / toConsume;
-				energyToSink *= ratio;
-				Log.dbg("{0}:OnFixedUpdate {1}: toConsume={2} ; consumed={3} ; ratio = {4}", this.ID, this.resources[i].name, toConsume, consumed, ratio);
+				energy *= (consumed/demand);
+				energySinkable += energy * r.hspu;
+				Log.dbg("{0}:OnFixedUpdate {1}: demand={2} ; consumed={3} ; energy = {4}", this.ID, r.name, demand, consumed, energy);
 			}
 
-			double energySunk = this.vesselModule.PumpHeat(energyToSink);
-			if (energySunk < 1)
+			double energySunk = this.vesselModule.PumpHeat(energySinkable);
+			if (double.IsNaN(energySunk))
 			{
 				this.heatExchangeEnabled = false;
 				//Lib.UI.PostScreenError(Localizer.Format("#SOMETHING");
 				Lib.UI.PostScreenWarning("No active Heat Sinks! Heat Exchanger is disabled!");
 			}
 			this.part.thermalInternalFlux -= energySunk;
-			Log.dbg("{0}:OnFixedUpdate enegySunk={1} ; this.part.temperature = {2}", this.ID, energySunk, this.part.temperature);
+			Log.dbg("{0}:OnFixedUpdate energySinkable={1} ; enegySunk={2} ; part.thermalInternalFlux = {3} ; part.temperature = {4}", this.ID, energySinkable, energySunk, this.part.thermalInternalFlux, this.part.temperature);
 		}
 
 		private void OnThresholdRatioChanged(object value)

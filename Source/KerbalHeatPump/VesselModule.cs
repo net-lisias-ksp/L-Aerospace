@@ -29,6 +29,14 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		#region KSP Life Cycle
 
+		public override void OnLoadVessel()
+		{
+			Log.dbg("{0}:OnLoadVessel", this.ID);
+			base.OnLoadVessel();
+			GameEvents.onVesselChange.Add(this.OnVesselChange);
+			GameEvents.onEditorShipModified.Add(this.OnEditorShipModified);
+		}
+
 		protected override void OnStart()
 		{
 			Log.dbg("{0}:OnStart {1}", this.ID, this.enabled);
@@ -52,14 +60,6 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			this.enabled = this.Enabled;
 		}
 
-		public override void OnLoadVessel()
-		{
-			Log.dbg("OnLoadVessel {0}:{1:X}", this.name, this.vessel.GetInstanceID());
-			base.OnLoadVessel();
-			GameEvents.onVesselChange.Add(this.OnVesselChange);
-			GameEvents.onEditorShipModified.Add(this.OnEditorShipModified);
-		}
-
 		public override void OnUnloadVessel()
 		{
 			Log.dbg("{0}:OnUnloadVessel", this.ID);
@@ -77,14 +77,23 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		public double PumpHeat(double energy)
 		{
-			int count = 0;
-			for (int i = 0; i < this.list.Count; ++i)
-				count += (this.list[i].Active ? 1 : 0);
-			if (count < 1) return energy;
-			double energyPerSink = energy / this.list.Count;
+			int count = this.list.Count;
+			Log.dbg("{0}:PumpHeat Trying {1} on {2} sinkers.", this.ID, energy, count);
+			if (count < 1) return double.NaN; // Ugly hack, but returning negative numbers are even worst due collateral effects. Better to blow up things early.
+
+			int passes = this.list.Count;
 			double sunkEnergy = 0;
-			for (int i = 0; i < count; ++i) // Ignore if the Sink is active or not, inactive Sinks will just return 0
-				sunkEnergy += this.list[i].SinkHeat(energyPerSink);
+			while (passes > 0 && energy - sunkEnergy > Lib.Physics.CUTOFF)
+			{	// If some sinker fail us, let's keep trying the other ones hoping they can absorb the remaining energy.
+				double energyPerSink = energy / passes;
+				for (int i = 0; i < count; ++i)
+				{
+					sunkEnergy += this.list[i].SinkHeat(energyPerSink);	// Ignore if the Sink is active or not, inactive Sinks will just return 0
+					passes -= 1;
+				}
+			}	// At this point, there's nothing left to be tried. Whatever happens, happens.
+
+			Log.dbg("{0}:PumpHeat Sunk {1} on {2} sinkers.", this.ID, sunkEnergy, count);
 			return sunkEnergy;
 		}
 
@@ -103,6 +112,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		internal static Controller GetModule(Vessel vessel)
 		{
+			if (null == vessel) return null; // Usefull to save some code from the caller when there's no vessel active, as on LoadingScreen.
+
 			int count = vessel.vesselModules.Count;
 			for (int i = 0; i < count; ++i) if (vessel.vesselModules[i] is Controller)
 				return vessel.vesselModules[i] as Controller;

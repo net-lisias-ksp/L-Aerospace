@@ -48,11 +48,13 @@
     <Compile Include="PartModules\KerbalHeatExchanger.cs" />
     <Compile Include="PartModules\KerbalHeatSink.cs" />
     <Compile Include="ResourceDef.cs" />
+    <Compile Include="PartModules\KerbalHeatDissipator.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\L-Aerospace\L-Aerospace.csproj">
       <Project>{5D6D7090-176D-4EBB-9AB9-C7337CBA6404}</Project>
       <Name>L-Aerospace</Name>
+      <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
