@@ -21,11 +21,11 @@
 using System;
 using System.Collections.Generic;
 
-namespace L_Aerospace { namespace KerbalHeatPump
+namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 {
 	public class Controller : VesselModule
 	{
-		private readonly List<ModuleKerbalHeatSink> list = new List<ModuleKerbalHeatSink>();
+		private readonly List<KerbalHeatSink> list = new List<KerbalHeatSink>();
 
 		#region KSP Life Cycle
 
@@ -94,7 +94,7 @@ namespace L_Aerospace { namespace KerbalHeatPump
 			for (int i = 0; i < this.vessel.parts.Count; ++i)
 			{
 				Part p = this.vessel.parts[i];
-				ModuleKerbalHeatSink m = p.FindModuleImplementing<ModuleKerbalHeatSink>();
+				KerbalHeatSink m = p.FindModuleImplementing<KerbalHeatSink>();
 				if (null == m) continue;
 				this.list.Add(m);
 			}
@@ -108,4 +108,4 @@ namespace L_Aerospace { namespace KerbalHeatPump
 			throw new EntryPointNotFoundException(typeof(Controller).FullName);
 		}
 	}
-} }
+} } }

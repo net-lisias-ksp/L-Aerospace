@@ -20,9 +20,9 @@
 */
 using System.Collections.Generic;
 
-namespace L_Aerospace.Controller.ControlSurface
+namespace L_Aerospace.Controller.AnimateGeneric
 {
-	public class ModuleControlSurfaceController : AbstractController<ModuleControlSurface>
+	public class AnimateGenericController : AbstractController<ModuleAnimateGeneric>
 	{
 		[UI_Toggle (disabledText = "Fixed", scene = UI_Scene.All, enabledText = "Flaperon", affectSymCounterparts = UI_Scene.All)]
 		[KSPField (isPersistant = true, guiActive = false, guiActiveEditor = true)]

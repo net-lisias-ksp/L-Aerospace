@@ -21,7 +21,9 @@
 using System;
 using System.Collections.Generic;
 
-namespace L_Aerospace { namespace KerbalHeatPump
+using KSPe;
+
+namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 {
 	internal struct ResourceDef
 	{
@@ -72,4 +74,4 @@ namespace L_Aerospace { namespace KerbalHeatPump
 			return r;
 		}
 	}
-} }
+} } }

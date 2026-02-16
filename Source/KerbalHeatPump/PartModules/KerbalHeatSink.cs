@@ -21,9 +21,9 @@
 using System;
 using System.Collections.Generic;
 
-namespace L_Aerospace { namespace KerbalHeatPump
+namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 {
-	public class ModuleKerbalHeatSink : PartModule
+	public class KerbalHeatSink : PartModule
 	{
 		public bool Active
 		{
@@ -165,6 +165,6 @@ namespace L_Aerospace { namespace KerbalHeatPump
 
 		private String __ID = null;
 		public String ID => __ID??(__ID = String.Format("{0}:{1:X}", this.name, this.part.GetInstanceID()));
-		private static readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<ModuleKerbalHeatSink>("L_Aerospace", "KerbalHeatSink", 0);
+		private static readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalHeatSink>("L_Aerospace.Kerbal.HeatPump", "Sink", 0);
 	}
-} }
+} } }

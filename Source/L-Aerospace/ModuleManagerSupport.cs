@@ -41,7 +41,7 @@ namespace L_Aerospace
 				Log.info("Kerbal Crew Mass detected with the value: {0} tons", PhysicsGlobals.KerbalCrewMass);
 
 			return
-					KSPe.Util.SystemTools.Type.Exists.By("L_Aerospace.KerbalCrewMass", "Controller")
+					KSPe.Util.SystemTools.Type.Exists.By("L_Aerospace.Kerbal.CrewMass", "Controller")
 				&&
 					PhysicsGlobals.KerbalCrewMass > 0.0f
 				&&
@@ -51,7 +51,7 @@ namespace L_Aerospace
 
 		private static bool checkForHeatPump()
 		{
-			return KSPe.Util.SystemTools.Type.Exists.By("L_Aerospace.KerbalHeatPump", "Controller");
+			return KSPe.Util.SystemTools.Type.Exists.By("L_Aerospace.Kerbal.HeatPump", "Controller");
 		}
 	}
 }

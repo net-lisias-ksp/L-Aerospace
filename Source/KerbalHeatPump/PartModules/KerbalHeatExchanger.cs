@@ -21,9 +21,9 @@
 using System;
 using System.Collections.Generic;
 
-namespace L_Aerospace { namespace KerbalHeatPump
+namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 {
-	public class ModuleKerbalHeatExchanger : PartModule
+	public class KerbalHeatExchanger : PartModule
 	{
 		[UI_Toggle (disabledText = "#autoLOC_900890", scene = UI_Scene.All, enabledText = "#autoLOC_900889", affectSymCounterparts = UI_Scene.All)]
 		[KSPField (isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "Heat Exchange")]
@@ -65,10 +65,10 @@ namespace L_Aerospace { namespace KerbalHeatPump
 		{
 			Log.dbg("OnCopy {0} from {1:X}", this.ID, fromModule.part.GetInstanceID());
 			base.OnCopy(fromModule);
-			this.heatExchangeEnabled = (fromModule as ModuleKerbalHeatExchanger).heatExchangeEnabled;
-			this.maxEnergyTransfer = (fromModule as ModuleKerbalHeatExchanger).maxEnergyTransfer;
-			this.thresholdRatio = (fromModule as ModuleKerbalHeatExchanger).thresholdRatio;
-			this.resources = (fromModule as ModuleKerbalHeatExchanger).resources;
+			this.heatExchangeEnabled = (fromModule as KerbalHeatExchanger).heatExchangeEnabled;
+			this.maxEnergyTransfer = (fromModule as KerbalHeatExchanger).maxEnergyTransfer;
+			this.thresholdRatio = (fromModule as KerbalHeatExchanger).thresholdRatio;
+			this.resources = (fromModule as KerbalHeatExchanger).resources;
 		}
 
 		public override void OnLoad(ConfigNode node)
@@ -176,12 +176,13 @@ namespace L_Aerospace { namespace KerbalHeatPump
 			float v = (float)this.part.maxTemp * (float)value;
 			BaseField field = Fields["thresholdRatio"];
 			field.guiName = string.Format("Heat EXCH THR: {0}", Lib.UI.Format(v, 0, "°K"));
+			this._getInfo = null; // Forces GetInfo to be regenerated.
 		}
 
 		#endregion
 
 		private String __ID = null;
 		public String ID => __ID??(__ID = String.Format("{0}:{1:X}", this.name, this.part.GetInstanceID()));
-		private static readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<ModuleKerbalHeatExchanger>("L_Aerospace", "KerbalHeatExchanger", 0);
+		private static readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalHeatExchanger>("L_Aerospace.Kerbal.HeatPump", "Exchange", 0);
 	}
-} }
+} } }

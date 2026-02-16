@@ -22,7 +22,7 @@ using System.Collections.Generic;
 
 namespace L_Aerospace.Controller.ControlSurface
 {
-	public class ModuleControlSurfaceController : AbstractController<ModuleControlSurface>
+	public class ControlSurfaceController : AbstractController<ModuleControlSurface>
 	{
 		[UI_Toggle (disabledText = "Fixed", scene = UI_Scene.All, enabledText = "Flaperon", affectSymCounterparts = UI_Scene.All)]
 		[KSPField (isPersistant = true, guiActive = false, guiActiveEditor = true)]

@@ -21,7 +21,7 @@
 using System;
 using UnityEngine;
 
-namespace L_Aerospace { namespace KerbalCrewMass
+namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 {
 	public class KerbalCrewMass : PartModule, IPartMassModifier
 	{
@@ -130,6 +130,6 @@ namespace L_Aerospace { namespace KerbalCrewMass
 		float IPartMassModifier.GetModuleMass(float defaultMass, ModifierStagingSituation sit) => this.massSurplus;
 		ModifierChangeWhen IPartMassModifier.GetModuleMassChangeWhen() => ModifierChangeWhen.FIXED;
 
-		private static readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalCrewMass>("L/Aerospace", "KerbalCrewMass", 0);
+		private static readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalCrewMass>("L_Aerospace.Kerbal.Kerbal.CrewMass", "Module", 0);
 	}
-} }
+} } }

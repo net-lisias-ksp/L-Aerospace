@@ -23,7 +23,7 @@ using System.Collections.Generic;
 
 namespace L_Aerospace.Controller.ResourceIntake
 {
-	public class ModuleResourceIntakeController : AbstractController<ModuleResourceIntake>
+	public class ResourceIntakeController : AbstractController<ModuleResourceIntake>
 	{
 	#region Dynamic Widgets
 		public const int MAX_RESOURCES_GUI = 4;
@@ -133,7 +133,7 @@ namespace L_Aerospace.Controller.ResourceIntake
 
 		private readonly StatusData[] status;
 
-		public ModuleResourceIntakeController()
+		public ResourceIntakeController()
 		{
 			this.updateDelegate = this.dummyUpdate;
 
