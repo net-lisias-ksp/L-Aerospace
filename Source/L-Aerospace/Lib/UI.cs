@@ -30,7 +30,8 @@ namespace L_Aerospace.Lib
 		internal static readonly Color Message_Colour_Warning = Color.yellow;
 		internal static readonly Color Message_Colour_Error = Color.red;
 
-		public static string Format(float value, int decimals, string unit = null)
+		public static string Format(float value, int decimals, string unit = null) => Format((double)value, decimals, unit);
+		public static string Format(double value, int decimals, string unit = null)
 		{
 			{
 				string repr = ((int)value).ToString();
@@ -42,17 +43,17 @@ namespace L_Aerospace.Lib
 					case 3: case 4: case 5:
 						unit = "k" + unit??"";
 						decimals = 2;
-						value /= (float)Math.Pow(10, 3);
+						value /= Math.Pow(10, 3);
 						break;
 					case 6: case 7: case 8:
 						unit = "m" + unit??"";
 						decimals = 4;
-						value /= (float)Math.Pow(10, 6);
+						value /= Math.Pow(10, 6);
 						break;
 					default:
 						decimals = 6;
 						--exponent;
-						value /= (float)Math.Pow(10, exponent);
+						value /= Math.Pow(10, exponent);
 						unit = string.Format("e+{0}", exponent) + unit??"";
 						break;
 				}
