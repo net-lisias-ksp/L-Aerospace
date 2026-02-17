@@ -25,10 +25,12 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 {
 	public class KerbalHeatSink : PartModule
 	{
+		[KSPField(isPersistant = true)]
+		private bool active = false;
 		public bool Active
 		{
-			get => this.isEnabled;
-			private set
+			get => this.active && this.isEnabled;
+			internal set
 			{
 				this.enabled = this.isEnabled = value;
 			}
@@ -58,6 +60,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			Log.dbg("{0}:OnLoad {1}", this.ID, null != node);
 			base.OnLoad(node);
+			this.active &= Globals.Instance.KerbalHeatPump;
+
 			this.Active = this.maxEnergyTransfer > 0;
 		}
 
@@ -107,7 +111,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		private string _getInfo = null;
 		public override string GetInfo()
 		{
-			if (!this.Active) return "Disabled.";
+			if (!Globals.Instance.KerbalHeatPump) return "Disabled.";
 			if (null == this._getInfo)
 			{
 				this._getInfo = string.Format(

@@ -19,22 +19,24 @@
 	along with L Aerospace. If not, see <https://www.gnu.org/licenses/>.
 */
 using System;
+using System.Collections.Generic;
+
 using UnityEngine;
 
 namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 {
 	public class KerbalCrewMass : PartModule, IPartMassModifier
 	{
-		private const bool visibleOnFlight = false;
-		private const bool visibleOnEditor = true;
-
-		#region KSP UI
-
-		[KSPField(isPersistant = true, guiActive = visibleOnFlight, guiActiveEditor = visibleOnEditor, guiName = "L/Aerospace::CrewMass")]
-		[UI_Toggle(disabledText = "Disabled", enabledText = "Enabled", scene = UI_Scene.All)]
-		public bool active = false;
-
-		#endregion
+		[KSPField(isPersistant = true)]
+		private bool active = false;
+		public bool Active
+		{
+			get => this.active && this.isEnabled;
+			internal set
+			{
+				this.enabled = this.isEnabled = value;
+			}
+		}
 
 		private float massSurplus;
 
@@ -44,31 +46,18 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 		{
 			Log.dbg("{0}:OnAwake", this.ID);
 			base.OnAwake();
-			this.active = Globals.Instance.KerbalCrewMass;
-		}
-
-		public override void OnStart(StartState state)
-		{
-			Log.dbg("{0}:OnStart {0} {1}", this.ID, state, this.active);
-			base.OnStart(state);
-			{
-				BaseField bf = this.Fields["active"];
-				bf.guiActive = Globals.Instance.DebugMode || (visibleOnFlight && Globals.Instance.PawEntries);
-				bf.guiActiveEditor = Globals.Instance.DebugMode || (visibleOnEditor && Globals.Instance.PawEntries);
-			}
-		}
-
-		public override void OnCopy(PartModule fromModule)
-		{
-			Log.dbg("{0}:OnCopy from {1:X}", this.ID, fromModule.part.GetInstanceID());
-			base.OnCopy(fromModule);
 		}
 
 		public override void OnLoad(ConfigNode node)
 		{
 			Log.dbg("{0}:OnLoad {1}", this.ID, null != node);
 			base.OnLoad(node);
-			this.CalculateCurrentMassSurplus();
+
+			// Without this, there's no reason to waste our time here!
+			// For future reference:
+			//		kerbalCrewMass = 0.09375  // Full equiped Kerbal (Parachute and JetPack)
+			//		kerbalCrewMass = 0.045    // Only the Kerbal
+			this.active &= Globals.Instance.KerbalCrewMass;
 		}
 
 		public override void OnSave(ConfigNode node)
@@ -77,10 +66,25 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 			base.OnSave(node);
 		}
 
+		public override void OnStart(StartState state)
+		{
+			Log.dbg("{0}:OnStart {0} {1}", this.ID, state, this.Active);
+			base.OnStart(state);
+
+			this.Active = state > StartState.Editor;
+		}
+
+		public override void OnCopy(PartModule fromModule)
+		{
+			Log.dbg("{0}:OnCopy from {1:X}", this.ID, fromModule.part.GetInstanceID());
+			base.OnCopy(fromModule);
+		}
+
 		public override void OnInitialize()
 		{
 			Log.dbg("{0}:OnInitialize", this.ID);
 			base.OnInitialize();
+			this.CalculateCurrentMassSurplus();
 		}
 
 		public override void OnActive()
@@ -101,6 +105,22 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 			this.deinit();
 		}
 
+		private string _getInfo = null;
+		public override string GetInfo()
+		{
+			if (!this.active) return "Disabled.";
+			if (null == this._getInfo)
+			{
+				this._getInfo = string.Format(
+							"Mass per Kerbal: {0}kG\n"
+							+ "Max Crew Mass: {1}kG"
+						, PhysicsGlobals.KerbalCrewMass
+						, PhysicsGlobals.KerbalCrewMass * this.part.CrewCapacity
+					);
+			}
+			return this._getInfo;
+		}
+
 		#endregion
 
 		private void CalculateCurrentMassSurplus()
@@ -113,21 +133,31 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 			// Switching Count with CrewCapacity saves a multiply to -1.
 			this.massSurplus = (this.part.protoModuleCrew.Count - this.part.CrewCapacity) * PhysicsGlobals.KerbalCrewMass;
 			Log.dbg("Recalculate mass surplus for {0} as {2} {3} = {4}", this.ID, this.part.protoModuleCrew.Count, this.part.CrewCapacity, this.massSurplus);
+#if DEBUG
+			{
+				List<string> crew = new List<string>();
+				for (int i = 0; i < this.part.protoModuleCrew.Count; ++i)
+					crew.Add(this.part.protoModuleCrew[i].name);
+				Log.dbg("Part {0} have {2} crew : {3}", this.ID, crew.Count, String.Join(", ", crew.ToArray()));
+			}
+#endif
 		}
 
 		private void OnVesselCrewWasModified(Vessel data) => this.CalculateCurrentMassSurplus();
-
+		private void OnEditorShipModified(ShipConstruct data) => this.CalculateCurrentMassSurplus();
 		private void init()
 		{
 			GameEvents.onVesselCrewWasModified.Add(this.OnVesselCrewWasModified);
+			GameEvents.onEditorShipModified.Add(this.OnEditorShipModified);
 		}
 
 		private void deinit()
 		{
+			GameEvents.onEditorShipModified.Remove(this.OnEditorShipModified);
 			GameEvents.onVesselCrewWasModified.Remove(this.OnVesselCrewWasModified);
 		}
 
-		float IPartMassModifier.GetModuleMass(float defaultMass, ModifierStagingSituation sit) => this.massSurplus;
+		float IPartMassModifier.GetModuleMass(float defaultMass, ModifierStagingSituation sit) => this.Active ? this.massSurplus : 0;
 		ModifierChangeWhen IPartMassModifier.GetModuleMassChangeWhen() => ModifierChangeWhen.FIXED;
 
 		private String __ID = null;

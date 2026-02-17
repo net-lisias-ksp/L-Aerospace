@@ -1,4 +1,4 @@
-﻿/*
+﻿	/*
 	This file is part of L Aerospace
 		© 2018-2026 LisiasT : http://lisias.net <support@lisias.net>
 
@@ -25,6 +25,17 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 {
 	public class KerbalHeatExchanger : PartModule
 	{
+		[KSPField(isPersistant = true)]
+		private bool active = false;
+		public bool Active
+		{
+			get => this.active && this.isEnabled;
+			internal set
+			{
+				this.enabled = this.isEnabled = value;
+			}
+		}
+
 		[UI_Toggle (disabledText = "#autoLOC_900890", scene = UI_Scene.All, enabledText = "#autoLOC_900889", affectSymCounterparts = UI_Scene.All)]
 		[KSPField (isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "Heat Exchange")]
 		public bool heatExchangeEnabled = false;
@@ -38,15 +49,6 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		private Controller vesselModule;
 		private ResourceDef[] resources = new ResourceDef[0];
-
-		public bool Active
-		{
-			get => this.isEnabled;
-			private set
-			{
-				this.enabled = this.isEnabled = value;
-			}
-		}
 
 		#region KSP Life Cycle
 
@@ -75,6 +77,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			base.OnLoad(node);
 			Log.dbg("{0}:OnLoad {1}", this.ID, null != node);
+			this.active &= Globals.Instance.KerbalHeatPump;
 
 			if (null == this.part.partInfo) return;
 			this.resources = ResourceDef.readList(this.part.partInfo.partConfig, this.GetType().Name).ToArray();
@@ -82,13 +85,13 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				Log.warn("{0}:OnLoad No Resources found! Deactivating myself...", this.ID);
 			else
 				Log.dbg("{0}:OnLoad Found {1} Resources", this.ID, this.resources.Length);
-			this.Active = 0 != this.resources.Length;
 #if DEBUG
 			{ 
 				for (int i = 0; i < this.resources.Length; ++i)
 					Log.dbg("{0}:OnLoad {1}", this.ID, this.resources[i]);
 			}
 #endif
+			this.Active = 0 != this.resources.Length;
 		}
 
 		public override void OnSave(ConfigNode node)
@@ -138,7 +141,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		private string _getInfo = null;
 		public override string GetInfo()
 		{
-			if (!this.Active) return "Disabled.";
+			if (!Globals.Instance.KerbalHeatPump) return "Disabled.";
 			if (null == this._getInfo)
 			{
 				BaseField field = Fields["thresholdRatio"];
@@ -146,8 +149,10 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				UI_FloatRange range = (UI_FloatRange)field.uiControlEditor;
 
 				this._getInfo = string.Format(
-							"Max Energy Transfer : {0}kW\n"
-							+ "Heat Exchage Theshold : from {1:F2}°K to {2:F2}°K"
+							"Max Energy Transfer: {0}kW\n"
+							+ "Heat Exchage Theshold:\n"
+							+ " - from {1:F2}°K\n"
+							+ " - to {2:F2}°K"
 						, this.maxEnergyTransfer
 						, range.minValue * this.part.maxTemp
 						, range.maxValue * this.part.maxTemp
@@ -181,7 +186,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		public override void OnFixedUpdate()
 		{
 			base.OnFixedUpdate();
-			if (!this.heatExchangeEnabled) return;
+			if (!(this.Active && this.heatExchangeEnabled)) return;
 
 			// pegar a temperatura da parte, multiplicar pela thermal mass.
 			double energyCurrent =  this.part.thermalMass * this.part.temperature;

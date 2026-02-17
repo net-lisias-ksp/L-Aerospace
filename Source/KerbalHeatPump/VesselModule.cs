@@ -73,7 +73,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		#endregion
 
-		public bool Enabled => Globals.Instance.KerbalCrewMass && 0 != PhysicsGlobals.KerbalCrewMass;
+		public bool Enabled => Globals.Instance.KerbalCrewMass;
 
 		public double PumpHeat(double energy)
 		{
