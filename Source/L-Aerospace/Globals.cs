@@ -33,6 +33,9 @@ namespace L_Aerospace
 
 		public readonly bool KerbalCrewMass;
 
+		public readonly bool KerbalCrewHeat;
+		public readonly double KerbalHeatPerCrew = 100;
+
 		public readonly bool PawEntries;
 
 		private Globals()
@@ -51,10 +54,17 @@ namespace L_Aerospace
 					try					{ this.KerbalCrewMass = cn.GetValue<bool>("KerbalCrewMass"); }
 					catch (Exception)	{ this.KerbalCrewMass = false; }
 				}
+				{
+					ConfigNodeWithSteroids cn = ConfigNodeWithSteroids.from(urlc.config.GetNode("INSTALLED"));
+
+					try					{ this.KerbalCrewHeat = cn.GetValue<bool>("KerbalCrewHeat"); }
+					catch (Exception)	{ this.KerbalCrewHeat = false; }
+				}
 			}
 			catch (Exception e)
 			{
-				this.KerbalCrewMass = false;
+				this.PawEntries = true;
+				this.KerbalCrewMass = this.KerbalCrewHeat = false;
 				Log.err(e, this);
 			}
 		}

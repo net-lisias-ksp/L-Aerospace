@@ -30,6 +30,7 @@ namespace L_Aerospace
 			List<string> tags = new List<string>();
 
 			if (checkForCrewMass())		tags.Add("L-AEROSPACE_CREW-MASS");
+			if (checkForCrewHeat())		tags.Add("L-AEROSPACE_CREW-HEAT");
 			if (checkForHeatPump())		tags.Add("L-AEROSPACE_HEAT-PUMP");
 			return tags.ToArray();
 		}
@@ -47,6 +48,11 @@ namespace L_Aerospace
 				&&
 					(KSPe.Util.KSP.Version.Current < KSPe.Util.KSP.Version.FindByVersion(1,11,0))
 			;
+		}
+
+		private static bool checkForCrewHeat()
+		{
+			return KSPe.Util.SystemTools.Type.Exists.By("L_Aerospace.Kerbal.CrewHeat", "Controller");
 		}
 
 		private static bool checkForHeatPump()
