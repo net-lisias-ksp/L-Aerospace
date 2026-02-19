@@ -42,23 +42,24 @@ namespace L_Aerospace
 		{
 			try
 			{
-				UrlDir.UrlConfig urlc = GameDatabase.Instance.GetConfigs("L_Aerospace")[0];
+				UrlDir.UrlConfig urlc = GameDatabase.Instance.GetConfigs("L-Aerospace")[0];
+				Log.dbg("Globals: {0}", urlc.config);
 				{ 
 					ConfigNodeWithSteroids cn = ConfigNodeWithSteroids.from(urlc.config);
 					try					{ this.PawEntries = cn.GetValue<bool>("PawEntries"); }
-					catch (Exception)	{ this.PawEntries = true; }
+					catch (Exception e)	{ this.PawEntries = true; Log.err(e, this); }
 				}
 				{
 					ConfigNodeWithSteroids cn = ConfigNodeWithSteroids.from(urlc.config.GetNode("INSTALLED"));
 
 					try					{ this.KerbalHeatPump = cn.GetValue<bool>("KerbalHeatPump"); }
-					catch (Exception)	{ this.KerbalHeatPump = false; }
+					catch (Exception e)	{ this.KerbalHeatPump = false; Log.err(e, this);}
 
 					try					{ this.KerbalCrewMass = 0 != PhysicsGlobals.KerbalCrewMass && cn.GetValue<bool>("KerbalCrewMass"); }
-					catch (Exception)	{ this.KerbalCrewMass = false; }
+					catch (Exception e)	{ this.KerbalCrewMass = false; Log.err(e, this);}
 
 					try					{ this.KerbalCrewHeat = cn.GetValue<bool>("KerbalCrewHeat"); }
-					catch (Exception)	{ this.KerbalCrewHeat = false; }
+					catch (Exception e)	{ this.KerbalCrewHeat = false; Log.err(e, this);}
 				}
 			}
 			catch (Exception e)
@@ -68,7 +69,7 @@ namespace L_Aerospace
 					this.KerbalCrewMass =
 					this.KerbalCrewHeat =
 					false;
-				Log.err(e, this);
+				Log.err(e, "Error reading L-Aerospace Config from GameDatabase. Some features were deactivated!", this);
 			}
 		}
 	}

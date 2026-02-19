@@ -29,6 +29,12 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		#region KSP Life Cycle
 
+		protected override void OnAwake()
+		{
+			Log.dbg("{0}:OnAwake", this.name);	// prevents a NRE due this.vessel.GetInstaceId not working yet.
+			base.OnAwake();
+		}
+
 		public override void OnLoadVessel()
 		{
 			Log.dbg("{0}:OnLoadVessel", this.ID);

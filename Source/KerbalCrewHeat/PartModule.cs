@@ -27,11 +27,10 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewHeat
 {
 	public class KerbalCrewHeat : PartModule
 	{
-		[KSPField(isPersistant = true)]
 		private bool active = false;
 		public bool Active
 		{
-			get => this.active && this.isEnabled;
+			get => Globals.Instance.KerbalCrewHeat && this.active && this.enabled;
 			internal set
 			{
 				this.enabled = this.isEnabled = value;
@@ -52,41 +51,34 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewHeat
 		{
 			Log.dbg("{0}:OnCopy from {1:X}", this.ID, fromModule.part.GetInstanceID());
 			base.OnCopy(fromModule);
+			this.active = (fromModule as KerbalCrewHeat).active;
 		}
 
 		public override void OnLoad(ConfigNode node)
 		{
 			Log.dbg("{0}:OnLoad {1}", this.ID, null != node);
 			base.OnLoad(node);
-			this.active &= Globals.Instance.KerbalCrewHeat;
+			node.TryGetValue("active", ref this.active);
 		}
 
 		public override void OnSave(ConfigNode node)
 		{
 			Log.dbg("{0}:OnSave {1}", this.ID, null != node);
 			base.OnSave(node);
-		}
-
-		public override void OnStart(StartState state)
-		{
-			Log.dbg("{0}:OnStart {0} {1}", this.ID, state, this.active);
-			base.OnStart(state);
-
-			this.Active = state > StartState.Editor;
-		}
-
-		public override void OnInitialize()
-		{
-			Log.dbg("{0}:OnInitialize", this.ID);
-			base.OnInitialize();
+			node.SetValue("active", this.active, true);
 		}
 
 		public override void OnActive()
 		{
 			Log.dbg("{0}:OnActive", this.ID);
 			base.OnActive();
-			this.CalculateCurrentHeatSurplus();
 			this.init();
+		}
+
+		public override void OnInitialize()
+		{
+			Log.dbg("{0}:OnInitialize {1} {2} {3} {4}", this.ID, Globals.Instance.KerbalHeatPump, this.enabled, this.active, this.Active);
+			base.OnInitialize();
 		}
 
 		// Needed because I had overriden OnActive.
@@ -98,6 +90,17 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewHeat
 			Log.dbg("{0}:OnInactive", this.ID);
 			base.OnInactive();
 			this.deinit();
+		}
+
+		public override void OnStart(StartState state)
+		{
+			Log.dbg("{0}:OnStart.in {1} {2} {3} {4}", this.ID, state, this.enabled, this.active, this.Active);
+			base.OnStart(state);
+
+			this.enabled = state > StartState.Editor;
+			this.CalculateCurrentHeatSurplus();
+
+			Log.dbg("{0}:OnStart.out {1} {2}", this.ID, state, this.Active);
 		}
 
 		private string _getInfo = null;

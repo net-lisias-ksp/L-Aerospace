@@ -27,11 +27,10 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 {
 	public class KerbalCrewMass : PartModule, IPartMassModifier
 	{
-		[KSPField(isPersistant = true)]
 		private bool active = false;
 		public bool Active
 		{
-			get => this.active && this.isEnabled;
+			get => Globals.Instance.KerbalCrewMass & this.active && this.enabled;
 			internal set
 			{
 				this.enabled = this.isEnabled = value;
@@ -48,43 +47,36 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 			base.OnAwake();
 		}
 
+		public override void OnCopy(PartModule fromModule)
+		{
+			Log.dbg("{0}:OnCopy from {1:X}", this.ID, fromModule.part.GetInstanceID());
+			base.OnCopy(fromModule);
+			this.active = (fromModule as KerbalCrewMass).active;
+		}
+
 		public override void OnLoad(ConfigNode node)
 		{
 			Log.dbg("{0}:OnLoad {1}", this.ID, null != node);
 			base.OnLoad(node);
+			node.TryGetValue("active", ref this.active);
 
 			// Without this, there's no reason to waste our time here!
 			// For future reference:
 			//		kerbalCrewMass = 0.09375  // Full equiped Kerbal (Parachute and JetPack)
 			//		kerbalCrewMass = 0.045    // Only the Kerbal
-			this.active &= Globals.Instance.KerbalCrewMass;
 		}
 
 		public override void OnSave(ConfigNode node)
 		{
 			Log.dbg("{0}:OnSave {1}", this.ID, null != node);
 			base.OnSave(node);
-		}
-
-		public override void OnStart(StartState state)
-		{
-			Log.dbg("{0}:OnStart {0} {1}", this.ID, state, this.Active);
-			base.OnStart(state);
-
-			this.Active = state > StartState.Editor;
-		}
-
-		public override void OnCopy(PartModule fromModule)
-		{
-			Log.dbg("{0}:OnCopy from {1:X}", this.ID, fromModule.part.GetInstanceID());
-			base.OnCopy(fromModule);
+			node.SetValue("active", this.active, true);
 		}
 
 		public override void OnInitialize()
 		{
-			Log.dbg("{0}:OnInitialize", this.ID);
+			Log.dbg("{0}:OnInitialize {1} {2} {3} {4}", this.ID, Globals.Instance.KerbalHeatPump, this.enabled, this.active, this.Active);
 			base.OnInitialize();
-			this.CalculateCurrentMassSurplus();
 		}
 
 		public override void OnActive()
@@ -103,6 +95,17 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 			Log.dbg("{0}:OnInactive", this.ID);
 			base.OnInactive();
 			this.deinit();
+		}
+
+		public override void OnStart(StartState state)
+		{
+			Log.dbg("{0}:OnStart.in {1} {2} {3} {4}", this.ID, state, this.enabled, this.active, this.Active);
+			base.OnStart(state);
+
+			this.enabled = state > StartState.Editor;
+			this.CalculateCurrentMassSurplus();
+
+			Log.dbg("{0}:OnStart.out {1} {2}", this.ID, state, this.Active);
 		}
 
 		private string _getInfo = null;
@@ -141,6 +144,7 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 				Log.dbg("Part {0} have {2} crew : {3}", this.ID, crew.Count, String.Join(", ", crew.ToArray()));
 			}
 #endif
+			this.Active = this.massSurplus > Lib.Physics.CUTOFF;
 		}
 
 		private void OnVesselCrewWasModified(Vessel data) => this.CalculateCurrentMassSurplus();

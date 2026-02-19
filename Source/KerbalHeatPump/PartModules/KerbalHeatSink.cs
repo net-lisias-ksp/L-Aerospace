@@ -25,11 +25,10 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 {
 	public class KerbalHeatSink : PartModule
 	{
-		[KSPField(isPersistant = true)]
 		private bool active = false;
 		public bool Active
 		{
-			get => this.active && this.isEnabled;
+			get => Globals.Instance.KerbalHeatPump && this.active && this.enabled;
 			internal set
 			{
 				this.enabled = this.isEnabled = value;
@@ -53,6 +52,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			Log.dbg("{0}:OnCopy from {1:X}", this.ID, fromModule.part.GetInstanceID());
 			base.OnCopy(fromModule);
+			this.active = (fromModule as KerbalHeatSink).active;
 			this.maxEnergyTransfer = (fromModule as KerbalHeatSink).maxEnergyTransfer;
 		}
 
@@ -60,36 +60,27 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			Log.dbg("{0}:OnLoad {1}", this.ID, null != node);
 			base.OnLoad(node);
-			this.active &= Globals.Instance.KerbalHeatPump;
-
-			this.Active = this.maxEnergyTransfer > 0;
+			node.TryGetValue("active", ref this.active);
 		}
 
 		public override void OnSave(ConfigNode node)
 		{
 			Log.dbg("{0}:OnSave {1}", this.ID, null != node);
 			base.OnSave(node);
-		}
-
-		public override void OnStart(StartState state)
-		{
-			Log.dbg("{0}:OnStart {1} {2}", this.ID, state, this.enabled);
-			base.OnStart(state);
-			this.Active &= state > StartState.Editor;
+			node.SetValue("active", this.active, true);
 		}
 
 		public override void OnInitialize()
 		{
-			Log.dbg("{0}:OnInitialize", this.ID);
+			Log.dbg("{0}:OnInitialize {1} {2} {3} {4}", this.ID, Globals.Instance.KerbalHeatPump, this.enabled, this.active, this.Active);
 			base.OnInitialize();
 			if (
-					this.Active
+					this.enabled
 					&& !this.IsStageable()	// Rationale: stageable parts should obey the stage rules,
 											// but we also need the "Active" life cycle nevertheless - so we force the activation
 											// only if the part is not stageable.
 				)
 				this.part.force_activate(); // This will activate the OnFixedUpdate
-			this.vesselModule = Controller.GetModule(this.vessel);
 		}
 
 		public override void OnActive()
@@ -108,10 +99,22 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			base.OnInactive();
 		}
 
+		public override void OnStart(StartState state)
+		{
+			Log.dbg("{0}:OnStart.in {1} {2} {3} {4}", this.ID, state, this.enabled, this.active, this.Active);
+			base.OnStart(state);
+
+			this.enabled = state > StartState.Editor;
+			this.vesselModule = Controller.GetModule(this.vessel);
+			this.Active = this.maxEnergyTransfer > 0;
+
+			Log.dbg("{0}:OnStart.out {1} {2}", this.ID, state, this.Active);
+		}
+
 		private string _getInfo = null;
 		public override string GetInfo()
 		{
-			if (!Globals.Instance.KerbalHeatPump) return "Disabled.";
+			if (!this.active) return "Disabled.";
 			if (null == this._getInfo)
 			{
 				this._getInfo = string.Format(

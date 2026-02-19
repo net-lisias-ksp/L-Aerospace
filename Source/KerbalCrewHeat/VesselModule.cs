@@ -38,6 +38,12 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewHeat
 
 		#region KSP Life Cycle
 
+		protected override void OnAwake()
+		{
+			Log.dbg("{0}:OnAwake", this.name);	// prevents a NRE due this.vessel.GetInstaceId not working yet.
+			base.OnAwake();
+		}
+
 		protected override void OnStart()
 		{
 			Log.dbg("{0}:OnStart", this.ID);
