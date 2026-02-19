@@ -40,7 +40,7 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 
 		protected override void OnAwake()
 		{
-			Log.dbg("{0}:OnAwake", this.ID);
+			Log.dbg("{0}:OnAwake", this.name);	// prevents a NRE due this.vessel.GetInstaceId not working yet.
 			base.OnAwake();
 			this.Active = Globals.Instance.KerbalCrewMass;
 		}

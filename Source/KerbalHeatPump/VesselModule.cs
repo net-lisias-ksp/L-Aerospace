@@ -54,7 +54,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		public override void OnGoOffRails()
 		{
-			Log.dbg("{0}OnGoOffRails", this.ID);
+			Log.dbg("{0}:OnGoOnRails {1}", this.ID, this.enabled);
 			base.OnGoOffRails();
 			this.populate();
 			this.enabled = this.Enabled;

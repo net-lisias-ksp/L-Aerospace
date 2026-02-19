@@ -145,7 +145,6 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			if (null == this._getInfo)
 			{
 				BaseField field = Fields["thresholdRatio"];
-				field.OnValueModified += this.OnThresholdRatioChanged;
 				UI_FloatRange range = (UI_FloatRange)field.uiControlEditor;
 
 				this._getInfo = string.Format(

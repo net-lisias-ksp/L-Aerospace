@@ -131,10 +131,11 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewHeat
 
 		private void CalculateCurrentHeatSurplus()
 		{
+			this.totalKerbalHeat = 0;
+			if (!this.Active) return;
 			if (null == this.part.protoModuleCrew)
 			{
 				Log.dbg("ERROR: null == this.part.protoModuleCrew for {0}. No Kerbal Heat today.", this.ID);
-				this.totalKerbalHeat = 0;
 				this.Active = false;
 				return;
 			}

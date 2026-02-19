@@ -20,6 +20,7 @@
 */
 using UnityEngine;
 using KSPe.Annotations;
+using System.Collections.Generic;
 
 namespace L_Aerospace
 {
@@ -28,7 +29,16 @@ namespace L_Aerospace
 	{
 		[UsedImplicitly]
 		private void Start() {
-			Log.force("Version {0}", Version.Text);
+			Log.force("Version {0} with {1}", Version.Text, this.getInstalledModules());
+		}
+
+		private object getInstalledModules()
+		{
+			List<string> installed = new List<string>(5);
+			if (ModuleManagerSupport.checkForCrewMass()) installed.Add("CrewMass");
+			if (ModuleManagerSupport.checkForCrewHeat()) installed.Add("CrewHeat");
+			if (ModuleManagerSupport.checkForHeatPump()) installed.Add("HeatPump");
+			return string.Join(", ", installed.ToArray());
 		}
 	}
 }

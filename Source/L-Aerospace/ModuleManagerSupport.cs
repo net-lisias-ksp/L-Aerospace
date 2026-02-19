@@ -35,7 +35,7 @@ namespace L_Aerospace
 			return tags.ToArray();
 		}
 
-		private static bool checkForCrewMass()
+		internal static bool checkForCrewMass()
 		{
 			// FIXME: Detect and prevent the use with Kerbalism or anything that adds CrewMass themselves!
 			if (PhysicsGlobals.KerbalCrewMass > 0.0f)
@@ -50,12 +50,12 @@ namespace L_Aerospace
 			;
 		}
 
-		private static bool checkForCrewHeat()
+		internal static bool checkForCrewHeat()
 		{
 			return KSPe.Util.SystemTools.Type.Exists.By("L_Aerospace.Kerbal.CrewHeat", "Controller");
 		}
 
-		private static bool checkForHeatPump()
+		internal static bool checkForHeatPump()
 		{
 			return KSPe.Util.SystemTools.Type.Exists.By("L_Aerospace.Kerbal.HeatPump", "Controller");
 		}
