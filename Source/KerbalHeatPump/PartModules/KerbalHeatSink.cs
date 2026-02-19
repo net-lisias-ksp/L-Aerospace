@@ -36,10 +36,10 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			}
 		}
 
-		private Controller vesselModule;
-
 		[KSPField (isPersistant = true)]
 		protected double maxEnergyTransfer = 7500;
+
+		private Controller vesselModule;
 
 		#region KSP Life Cycle
 

@@ -29,17 +29,20 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 	{
 		internal readonly int id;
 		internal readonly string name;
-		internal readonly double ratio;
+		internal readonly double consuption;
+
 		internal PartResourceDefinition def;
 		internal readonly double hspu;	// Joules per Unit per °K
 		internal readonly double hsp;	// Joules per Kg per °K
+		internal readonly double ratio;	// How many units (consuption) consumed per Unit
 
-		internal ResourceDef(string name, double ratio) : this()
+		private ResourceDef(double autonomy, string name, double consuption) : this()
 		{
 			PartResourceDefinition r = PartResourceLibrary.Instance.GetDefinition(name);
 			this.id = r.id;
 			this.name = name;
-			this.ratio = ratio;
+			this.consuption = consuption;
+
 			this.def = r;
 
 			// density : Tons per Unit
@@ -47,6 +50,9 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 			this.hsp = 1000 * r.density * r.specificHeatCapacity; // HSP per kG, not per U.
 			this.hspu = r.specificHeatCapacity; // HSP per U, not per kG.
+			this.ratio = consuption / autonomy;
+
+			Log.dbg("{0} {1} {2} {3} {4} {5}", this.id, this.name, this.consuption, this.hsp, this.hspu, this.ratio);
 		}
 
 		public override string ToString() =>
@@ -55,18 +61,20 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 					: string.Format("ResourceDef:{{id:{0} name:{1} density:{2} hsp:{3} hspu:{4}}}", this.id, this.name, this.def.density, this.def.specificHeatCapacity, this.hspu)
 				;
 
-		internal static ResourceDef from(ConfigNode node) => from(ConfigNodeWithSteroids.from(node));
-		internal static ResourceDef from(ConfigNodeWithSteroids node)
+		internal static ResourceDef from(double autonomy, ConfigNode node) => from(autonomy, ConfigNodeWithSteroids.from(node));
+		internal static ResourceDef from(double autonomy, ConfigNodeWithSteroids node)
 		{
 			return new ResourceDef(
+						autonomy,
 						node.GetValue("name"),
-						node.GetValue<double>("ratio", 0d)
+						node.GetValue<double>("consuption", 0d)
 					);;
 		}
 
-		internal static ResourceDef from(ResourceRatio r)
+		internal static ResourceDef from(double autonomy, ResourceRatio r)
 		{
 			return new ResourceDef(
+						autonomy,
 						r.ResourceName,
 						r.Ratio
 					);
@@ -76,11 +84,11 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			ConfigNode r = new ConfigNode("RESOURCE");
 			r.AddValue("name", this.name);
-			r.AddValue("ratio", this.ratio);
+			r.AddValue("consuption", this.consuption);
 			return r;
 		}
 
-		internal static List<ResourceDef> readList(ConfigNode partConfig, string name)
+		internal static List<ResourceDef> readList(double autonomy, ConfigNode partConfig, string name)
 		{
 			ConfigNode moduleConfig = null;
 			{
@@ -95,7 +103,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			if (null == nodes) return r;
 
 			for (int i = 0; i < nodes.Length; ++i)
-				r.Add(ResourceDef.from(nodes[i]));
+				r.Add(ResourceDef.from(autonomy, nodes[i]));
 
 			return r;
 		}

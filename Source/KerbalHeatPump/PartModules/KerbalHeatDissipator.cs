@@ -36,8 +36,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			}
 		}
 
-		[UI_Toggle (disabledText = "#autoLOC_900890", scene = UI_Scene.All, enabledText = "#autoLOC_900889", affectSymCounterparts = UI_Scene.All)]
 		[KSPField (isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Heat Exchange")]
+		[UI_Toggle (disabledText = "#autoLOC_900890", scene = UI_Scene.All, enabledText = "#autoLOC_900889", affectSymCounterparts = UI_Scene.All)]
 		public bool heatExchangeEnabled = false;
 
 		[KSPField( isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cooland Usage Threshold", guiFormat = "P0")]
@@ -57,6 +57,11 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			Log.dbg("{0}:OnAwake", this.ID);
 			base.OnAwake();
+			{
+				BaseField field = Fields["maxEnergyTransfer"];
+				field.OnValueModified += this.OnMaxEnergyTransfer;
+				//UI_FloatRange range = (UI_FloatRange)field.uiControlEditor;
+			}
 		}
 
 		public override void OnCopy(PartModule fromModule)
@@ -77,7 +82,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			if (null == this.part.partInfo) return;
 
 			{ 
-				this.resources = ResourceDef.readList(this.part.partInfo.partConfig, this.GetType().Name).ToArray();
+				this.resources = ResourceDef.readList(this.maxEnergyTransfer, this.part.partInfo.partConfig, this.GetType().Name).ToArray();
 				if (0 == this.resources.Length)
 					Log.warn("{0}:OnLoad No Resources found! Deactivating myself...", this.ID);
 				else
@@ -212,57 +217,63 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			double energyCurrent = this.part.thermalMass * this.part.temperature;
 
 			// subtrair os dois, essa eh a energia que queremos remover do circuito
-			double energyToDissipate = energyCurrent - energyGoal;
-			double maxEnergyToDissipate = Math.Min(this.maxEnergyTransfer, energyToDissipate);
+			double energyWeWantToDissipate = energyCurrent - energyGoal;
+			double energyWeCanDissipate = Math.Min(this.maxEnergyTransfer, energyWeWantToDissipate);
 
-			Log.dbg("{0}:OnFixedUpdate maxEnergyToDissipate={1} ; energyToDissipate={2}", this.ID, maxEnergyToDissipate, energyToDissipate);
-			if (maxEnergyToDissipate < 1) return;
+			Log.dbg("{0}:OnFixedUpdate energyWeCanDissipate={1} ; energyWeWantToDissipate={2}", this.ID, energyWeCanDissipate, energyWeWantToDissipate);
+			if (energyWeCanDissipate < 1) return;
 
+			Log.dbg("{0}:OnFixedUpdate energyGoal = {1} ; energyCurrent = {2} ; energyWeCanDissipate = {3} ; energyWeWantToDissipate = {4}", this.ID, energyGoal, energyCurrent, energyWeCanDissipate, energyWeWantToDissipate);
+
+			energyWeWantToDissipate *= TimeWarp.fixedDeltaTime;
 			double maxEnergyTransfer = this.maxEnergyTransfer * TimeWarp.fixedDeltaTime;
-			energyToDissipate *= TimeWarp.fixedDeltaTime;
-
-			Log.dbg("{0}:OnFixedUpdate energyGoal = {1} ; energyCurrent = {2} ; maxEnergyToDissipate = {3} ; energyToDissipate = {4}", this.ID, energyGoal, energyCurrent, maxEnergyToDissipate, energyToDissipate);
-
 			for (int i = 0; i < this.resources.Length; ++i)
 			{
 				ResourceDef r = this.resources[i];
 
 				// Only the coolant in the part is accountable for thermal transfer! Heat Dissipators don't work remotely! :)
-				double energy = 0;
+				double energy;
+				double coollantThresholdRatio = this.coollantThresholdRatio;
 				if (this.intakes.ContainsKey(r))
 				{
 					energy = 0;
+					coollantThresholdRatio = 1.0;
 					ModuleResourceIntake[] l = this.intakes[r];
 					for (int j = 0 ; j < l.Length ; ++j) if (l[j].intakeEnabled)
 						energy += l[j].airFlow * l[j].intakeSpeed * r.hspu;
 				}
 				else
-					energy = this.part.Resources.Get(r.id).amount * r.hspu * this.coollantThresholdRatio;
+				{
+					energy = this.part.Resources.Get(r.id).amount * r.hspu;
+					coollantThresholdRatio = this.coollantThresholdRatio;
+				}
 
-				energy = Math.Min(energyToDissipate, energy * TimeWarp.fixedDeltaTime);
+				energy *= TimeWarp.fixedDeltaTime;
+				energy = Math.Min(energyWeWantToDissipate, energy);
 
-				Log.dbg("{0}:OnFixedUpdate {1} energyToDissipate={2} ; energy={3}", this.ID, r.name, energyToDissipate, energy);
+				Log.dbg("{0}:OnFixedUpdate {1} energyWeWantToDissipate={2} ; energy={3} ; maxEnergyTransfer={4}", this.ID, r.name, energyWeWantToDissipate, energy, maxEnergyTransfer);
 
-				double demand = energy * r.ratio * energyToDissipate / maxEnergyTransfer;
+				double demand = r.ratio * Math.Min(coollantThresholdRatio, energyWeWantToDissipate / maxEnergyTransfer);
+				energy *= TimeWarp.fixedDeltaTime;
 				if (demand > Lib.Physics.CUTOFF)
 				{
 					double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
 					energy *= (consumed/demand);
-					Log.dbg("{0}:OnFixedUpdate {1} demand={2} ; consumed={3} ; energy = {4} ; energyToDissipate = {5}", this.ID, r.name, demand, consumed, energy, energyToDissipate);
+					Log.dbg("{0}:OnFixedUpdate {1} demand={2} ; consumed={3} ; energy = {4} ; energyToDissipate = {5}", this.ID, r.name, demand, consumed, energy, energyWeWantToDissipate);
 				}
 				this.part.thermalInternalFlux -= energy;
-				energyToDissipate = Math.Max(0, energyToDissipate - energy);
-				Log.dbg("{0}:OnFixedUpdate part.temperature={1} ; part.thermalInternalFlux={2} ; energy={3} ; (left)energyToDissipate={4}", this.ID, this.part.temperature, this.part.thermalInternalFlux, energy, energyToDissipate);
-				if (energyToDissipate < Lib.Physics.CUTOFF) break;
+				energyWeWantToDissipate = Math.Max(0, energyWeWantToDissipate - energy);
+				Log.dbg("{0}:OnFixedUpdate part.temperature={1} ; part.thermalInternalFlux={2} ; energy={3} ; (left)energyToDissipate={4}", this.ID, this.part.temperature, this.part.thermalInternalFlux, energy, energyWeWantToDissipate);
+				if (energyWeWantToDissipate < Lib.Physics.CUTOFF) break;
 			}
-			Log.dbg("{0}:OnFixedUpdate enegyNotDissipated={1} ; this.part.thermalInternalFlux = {2} ; this.part.temperature = {3} ; intakeResourceTemp = {4}", this.ID, energyToDissipate, this.part.thermalInternalFlux, this.part.temperature, intakeResourceTemp);
+			Log.dbg("{0}:OnFixedUpdate enegyNotDissipated={1} ; this.part.thermalInternalFlux = {2} ; this.part.temperature = {3} ; intakeResourceTemp = {4}", this.ID, energyWeWantToDissipate, this.part.thermalInternalFlux, this.part.temperature, intakeResourceTemp);
 		}
 
-		private void OnThresholdRatioChanged(object value)
+		private void OnMaxEnergyTransfer(object value)
 		{
-			float v = (float)this.part.maxTemp * (float)value;
-			BaseField field = Fields["thresholdRatio"];
-			field.guiName = string.Format("Heat EXCH THR: {0}", L_Aerospace.Lib.UI.Format(v, 0, "°K"));
+			float v = (float)this.maxEnergyTransfer * (float)value;
+			BaseField field = Fields["maxEnergyTransfer"];
+			field.guiName = string.Format("Heat EXCH THR: {0}", L_Aerospace.Lib.UI.Format(v, 0, "J"));
 			this._getInfo = null; // Forces GetInfo to be regenerated.
 		}
 

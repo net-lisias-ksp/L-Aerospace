@@ -36,8 +36,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			}
 		}
 
-		[UI_Toggle (disabledText = "#autoLOC_900890", scene = UI_Scene.All, enabledText = "#autoLOC_900889", affectSymCounterparts = UI_Scene.All)]
 		[KSPField (isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "Heat Exchange")]
+		[UI_Toggle (disabledText = "#autoLOC_900890", scene = UI_Scene.All, enabledText = "#autoLOC_900889", affectSymCounterparts = UI_Scene.All)]
 		public bool heatExchangeEnabled = false;
 
 		[KSPField (isPersistant = true)]
@@ -80,7 +80,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			this.active &= Globals.Instance.KerbalHeatPump;
 
 			if (null == this.part.partInfo) return;
-			this.resources = ResourceDef.readList(this.part.partInfo.partConfig, this.GetType().Name).ToArray();
+			this.resources = ResourceDef.readList(this.maxEnergyTransfer, this.part.partInfo.partConfig, this.GetType().Name).ToArray();
 			if (0 == this.resources.Length)
 				Log.warn("{0}:OnLoad No Resources found! Deactivating myself...", this.ID);
 			else
@@ -192,11 +192,11 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			double energyCurrent =  this.part.thermalMass * this.part.temperature;
 			double energyGoal = this.part.thermalMass * (this.part.maxTemp * ((double)this.thresholdRatio));
 
-			double maxEnergyToSink = energyCurrent - energyGoal;
-			Log.dbg("{0}:OnFixedUpdate maxEnergyToSink={1}", this.ID, maxEnergyToSink);
-			if (maxEnergyToSink < 1) return;
+			double energyWeWantToSink = energyCurrent - energyGoal;
+			Log.dbg("{0}:OnFixedUpdate energyWeWantToSink={1}", this.ID, energyWeWantToSink);
+			if (energyWeWantToSink < 1) return;
 
-			double energyToSink = Math.Min(maxEnergyToSink, this.maxEnergyTransfer) * TimeWarp.fixedDeltaTime;
+			double energyWeCanSink = Math.Min(energyWeWantToSink, this.maxEnergyTransfer);
 
 			// Only the coolant in the part is accountable for thermal transfer!
 			double energyAvailable = 0;
@@ -205,7 +205,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			energyAvailable *= TimeWarp.fixedDeltaTime;
 			if (energyAvailable < Lib.Physics.CUTOFF)
 			{
-				Log.dbg("{0}:OnFixedUpdate {1} NOT ENOUGH OUT OF COOLANTS!", this.ID);
+				Log.dbg("{0}:OnFixedUpdate NOT ENOUGH OUT OF COOLANTS!", this.ID);
 				// Any already consumed resouces are lost.
 				this.heatExchangeEnabled = false;
 				//Lib.UI.PostScreenWarning(Localizer.Format("#SOMETHING", this.vessel.vesselName, this.resources[i].name));
@@ -213,16 +213,15 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				return;
 			}
 
-			Log.dbg("{0}:OnFixedUpdate maxEnergyToSink={1} ; energyToSink={2} ; energyAvailable={3}", this.ID, maxEnergyToSink, energyToSink, energyAvailable);
+			Log.dbg("{0}:OnFixedUpdate energyWeWantToSink={1} ; energyWeCanSink={2} ; energyAvailable={3} ; maxEnergyTransfer {4}", this.ID, energyWeWantToSink, energyWeCanSink, energyAvailable, this.maxEnergyTransfer);
 
-			double energy = Math.Min(energyToSink, energyAvailable);
-
-			double energySinkable = 0;
+			double energy = Math.Min(energyWeCanSink, energyAvailable) * TimeWarp.fixedDeltaTime;
+			double energyToBeSunk = 0;
 			for (int i = 0; i < this.resources.Length; ++i)
 			{
 				ResourceDef r = this.resources[i];
 
-				double demand = energy * r.ratio * energyToSink / energyAvailable;
+				double demand = r.ratio * (energyWeCanSink / this.maxEnergyTransfer);
 				double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
 				if (consumed < Lib.Physics.CUTOFF && demand > Lib.Physics.CUTOFF)
 				{
@@ -234,11 +233,11 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 					return;
 				}
 				energy *= (consumed/demand);
-				energySinkable += energy * r.hspu;
+				energyToBeSunk += energy * r.hspu;
 				Log.dbg("{0}:OnFixedUpdate {1}: demand={2} ; consumed={3} ; energy = {4}", this.ID, r.name, demand, consumed, energy);
 			}
 
-			double energySunk = this.vesselModule.PumpHeat(energySinkable);
+			double energySunk = this.vesselModule.PumpHeat(energyToBeSunk);
 			if (double.IsNaN(energySunk))
 			{
 				this.heatExchangeEnabled = false;
@@ -246,7 +245,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				Lib.UI.PostScreenWarning("No active Heat Sinks! Heat Exchanger is disabled!");
 			}
 			this.part.thermalInternalFlux -= energySunk;
-			Log.dbg("{0}:OnFixedUpdate energySinkable={1} ; enegySunk={2} ; part.thermalInternalFlux = {3} ; part.temperature = {4}", this.ID, energySinkable, energySunk, this.part.thermalInternalFlux, this.part.temperature);
+			Log.dbg("{0}:OnFixedUpdate energyToBeSunk={1} ; enegySunk={2} ; part.thermalInternalFlux = {3} ; part.temperature = {4}", this.ID, energyToBeSunk, energySunk, this.part.thermalInternalFlux, this.part.temperature);
 		}
 
 		private void OnThresholdRatioChanged(object value)
