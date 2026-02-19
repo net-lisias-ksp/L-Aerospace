@@ -81,48 +81,11 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 			if (null == this.part.partInfo) return;
 
-			{ 
-				this.resources = ResourceDef.readList(this.maxEnergyTransfer, this.part.partInfo.partConfig, this.GetType().Name).ToArray();
-				if (0 == this.resources.Length)
-					Log.warn("{0}:OnLoad No Resources found! Deactivating myself...", this.ID);
-				else
-					Log.dbg("{0}:OnLoad Found {1} Resources", this.ID, this.resources.Length);
-#if DEBUG
-				{
-					for (int i = 0; i < this.resources.Length; ++i)
-						Log.dbg("{0}:OnLoad {1}", this.ID, this.resources[i]);
-				}
-#endif
-			}
-
+			this.resources = Lib.Part.buildResourceList(this, this.maxEnergyTransfer, this.ID);
 			this.Active = 0 != this.resources.Length;
 
-			{
-				int count = 0;
-				List<ModuleResourceIntake> all = this.part.FindModulesImplementing<ModuleResourceIntake>();
-				for (int i = 0; i < this.resources.Length; ++i)
-				{
-					ResourceDef r = this.resources[i];
-					string resourceName = r.name;
-					List<ModuleResourceIntake> intakes = new List<ModuleResourceIntake>(this.part.Modules.Count);
-					for (int j = 0; j < all.Count; ++j)
-						if (resourceName.Equals(all[j].resourceName))
-							intakes.Add(all[j]);
-					if (intakes.Count > 0)
-					{
-						ModuleResourceIntake[] intakeArray = intakes.ToArray();
-						this.intakes[r] = intakeArray;
-						count += intakeArray.Length;
-					}
-				}
-
-				if (0 == count)
-					Log.warn("{0}:OnLoad No Resource Intakes found! Deactivating myself...", this.ID);
-				else
-					Log.dbg("{0}:OnLoad Found {1} Resource Intakes", this.ID, count);
-
-				this.Active &= 0 != count;
-			}
+			this.intakes = Lib.Part.buildIntakeList(this, this.resources, this.ID);
+			this.Active &= 0 != this.intakes.Count;
 		}
 
 		public override void OnSave(ConfigNode node)
