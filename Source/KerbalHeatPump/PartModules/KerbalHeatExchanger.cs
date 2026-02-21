@@ -22,18 +22,8 @@ using System;
 
 namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 {
-	public class KerbalHeatExchanger : PartModule
+	public class KerbalHeatExchanger : L_Aerospace.Lib.AbstractPartModuleAutoActivable
 	{
-		private bool active = false;
-		public bool Active
-		{
-			get => Globals.Instance.KerbalHeatPump && this.active && this.enabled;
-			internal set
-			{
-				this.enabled = this.isEnabled = value;
-			}
-		}
-
 		[KSPField (isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "Heat Exchange")]
 		[UI_Toggle (disabledText = "#autoLOC_900890", scene = UI_Scene.All, enabledText = "#autoLOC_900889", affectSymCounterparts = UI_Scene.All)]
 		public bool heatExchangeEnabled = false;
@@ -50,10 +40,9 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		#region KSP Life Cycle
 
-		public override void OnAwake()
+		protected override void DoAwake()
 		{
-			Log.dbg("{0}:OnAwake", this.ID);
-			base.OnAwake();
+			this.hardActive = Globals.Instance.KerbalHeatPump;
 			{
 				BaseField field = Fields["thresholdRatio"];
 				field.OnValueModified += this.OnThresholdRatioChanged;
@@ -61,24 +50,18 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			}
 		}
 
-		public override void OnCopy(PartModule fromModule)
+		protected override void DoCopy(PartModule fromModule)
 		{
-			Log.dbg("{0}:OnCopy from {1:X}", this.ID, fromModule.part.GetInstanceID());
-			base.OnCopy(fromModule);
-			this.active = (fromModule as KerbalHeatExchanger).active;
 			this.heatExchangeEnabled = (fromModule as KerbalHeatExchanger).heatExchangeEnabled;
 			this.maxEnergyTransfer = (fromModule as KerbalHeatExchanger).maxEnergyTransfer;
 			this.thresholdRatio = (fromModule as KerbalHeatExchanger).thresholdRatio;
 			this.resources = (fromModule as KerbalHeatExchanger).resources;
 		}
 
-		public override void OnLoad(ConfigNode node)
+		protected override void DoSave(KSPe.ConfigNodeWithSteroids node) { }
+		protected override void DoPrefabLoad(KSPe.ConfigNodeWithSteroids node) { }
+		protected override void DoLoad(KSPe.ConfigNodeWithSteroids node)
 		{
-			base.OnLoad(node);
-			Log.dbg("{0}:OnLoad {1}", this.ID, null != node);
-			node.TryGetValue("active", ref this.active);
-
-			if (null == this.part.partInfo) return;
 			this.resources = ResourceDef.readList(this.maxEnergyTransfer, this.part.partInfo.partConfig, this.GetType().Name).ToArray();
 			if (0 == this.resources.Length)
 				Log.warn("{0}:OnLoad No Resources found! Deactivating myself...", this.ID);
@@ -92,104 +75,56 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 #endif
 		}
 
-		public override void OnSave(ConfigNode node)
+		protected override void DoStart(StartState state)
 		{
-			Log.dbg("{0}:OnSave {1}", this.ID, null != node);
-			base.OnSave(node);
-			node.SetValue("active", this.active, true);
-		}
-
-		public override void OnInitialize()
-		{
-			Log.dbg("{0}:OnInitialize {1} {2} {3} {4}", this.ID, Globals.Instance.KerbalHeatPump, this.enabled, this.active, this.Active);
-			base.OnInitialize();
-
-			if (
-					this.enabled
-					&& !this.IsStageable()	// Rationale: stageable parts should obey the stage rules,
-											// but we also need the "Active" life cycle nevertheless - so we force the activation
-											// only if the part is not stageable.
-				)
-				this.part.force_activate(); // This will activate the OnFixedUpdate
-		}
-
-		public override void OnActive()
-		{
-			Log.dbg("{0}:OnActive", this.ID);
-			base.OnActive();
-		}
-
-		// Needed because I had overriden OnActive.
-		// See https://kerbalspaceprogram.com/api/class_part_module.html#a6f2dd76038326c527e64d2ce96bb45fe
-		public override bool IsStageable() => false;
-
-		public override void OnInactive()
-		{
-			Log.dbg("{0}:OnInactive", this.ID);
-			base.OnInactive();
-		}
-
-		public override void OnStart(StartState state)
-		{
-			Log.dbg("{0}:OnStart.in {1} {2} {3} {4}", this.ID, state, this.enabled, this.active, this.Active);
-			base.OnStart(state);
-
-			this.enabled = state > StartState.Editor;
 			this.OnThresholdRatioChanged(this.thresholdRatio);
 			this.vesselModule = Controller.GetModule(this.vessel);
 			this.Active = 0 != this.resources.Length;
-
-			Log.dbg("{0}:OnStart.out {1} {2}", this.ID, state, this.Active);
 		}
 
-		private string _getInfo = null;
-		public override string GetInfo()
+		protected override string DoGetInfo()
 		{
-			if (!this.active) return "Disabled.";
-			if (null == this._getInfo)
+			BaseField field = Fields["thresholdRatio"];
+			UI_FloatRange range = (UI_FloatRange)field.uiControlEditor;
+
+			string r = string.Format(
+						"Max Energy Transfer: {0}kW\n"
+						+ "Heat Exchage Theshold:\n"
+						+ " - from {1:F2}°K\n"
+						+ " - to {2:F2}°K"
+					, this.maxEnergyTransfer
+					, range.minValue * this.part.maxTemp
+					, range.maxValue * this.part.maxTemp
+				);
+			if (this.resources.Length > 0)
 			{
-				BaseField field = Fields["thresholdRatio"];
-				UI_FloatRange range = (UI_FloatRange)field.uiControlEditor;
-
-				this._getInfo = string.Format(
-							"Max Energy Transfer: {0}kW\n"
-							+ "Heat Exchage Theshold:\n"
-							+ " - from {1:F2}°K\n"
-							+ " - to {2:F2}°K"
-						, this.maxEnergyTransfer
-						, range.minValue * this.part.maxTemp
-						, range.maxValue * this.part.maxTemp
-					);
-				if (this.resources.Length > 0)
+				r += "\n<b>Consumables</b>";
+				for (int i = 0; i < this.resources.Length; ++i)
 				{
-					this._getInfo += "\n<b>Consumables</b>";
-					for (int i = 0; i < this.resources.Length; ++i)
-					{
-						if (this.resources[i].ratio > 0)
-							this._getInfo += string.Format(
-									"\n\t{0} : {1} {2}"
-								, this.resources[i].name
-								, this.resources[i].ratio*this.resources[i].def.density*1000
-								, "kG/J" 
-							);
-						if (this.resources[i].hsp > 0)
-							this._getInfo += string.Format(
-									"\n\t{0} : {1} {2}"
-								, this.resources[i].name
-								, this.resources[i].hsp
-								, "J/(kG°K)" 
-							);
-					}
+					if (this.resources[i].ratio > 0)
+						r += string.Format(
+								"\n\t{0} : {1} {2}"
+							, this.resources[i].name
+							, this.resources[i].ratio*this.resources[i].def.density*1000
+							, "kG/J" 
+						);
+					if (this.resources[i].hsp > 0)
+						r += string.Format(
+								"\n\t{0} : {1} {2}"
+							, this.resources[i].name
+							, this.resources[i].hsp
+							, "J/(kG°K)" 
+						);
 				}
-
 			}
-			return this._getInfo;
+			return r;
 		}
 
-		public override void OnFixedUpdate()
+		protected override void DoUpdate() { }
+
+		protected override void DoFixedUpdate()
 		{
-			base.OnFixedUpdate();
-			if (!(this.Active && this.heatExchangeEnabled)) return;
+			if (!this.heatExchangeEnabled) return;
 
 			// pegar a temperatura da parte, multiplicar pela thermal mass.
 			double energyCurrent =  this.part.thermalMass * this.part.temperature;
@@ -256,13 +191,12 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			float v = (float)this.part.maxTemp * (float)value;
 			BaseField field = Fields["thresholdRatio"];
 			field.guiName = string.Format("Heat EXCH THR: {0}", Lib.UI.Format(v, 0, "°K"));
-			this._getInfo = null; // Forces GetInfo to be regenerated.
+			this.ResetInfo(); // Forces GetInfo to be regenerated.
 		}
 
 		#endregion
 
-		private String __ID = null;
-		public String ID => __ID??(__ID = String.Format("{0}:{1:X}", this.name, this.part.GetInstanceID()));
-		private static readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalHeatExchanger>("L_Aerospace.Kerbal.HeatPump", "Exchanger", 0);
+		private static new readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalHeatExchanger>("L_Aerospace.Kerbal.HeatPump", "Exchanger", 0);
+		protected override KSPe.Util.Log.Logger GetLogger() => Log;
 	}
 } } }

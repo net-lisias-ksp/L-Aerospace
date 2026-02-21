@@ -25,104 +25,46 @@ using UnityEngine;
 
 namespace L_Aerospace { namespace Kerbal { namespace CrewHeat
 {
-	public class KerbalCrewHeat : PartModule
+	public class KerbalCrewHeat : L_Aerospace.Lib.AbstractPartModuleAutoActivable
 	{
-		private bool active = false;
-		public bool Active
-		{
-			get => Globals.Instance.KerbalCrewHeat && this.active && this.enabled;
-			internal set
-			{
-				this.enabled = this.isEnabled = value;
-			}
-		}
-
 		private double totalKerbalHeat = 0;
 
 		#region KSP Life Cycle
 
-		public override void OnAwake()
+		protected override void DoAwake()
 		{
-			Log.dbg("{0}:OnAwake", this.ID);
-			base.OnAwake();
+			this.hardActive = Globals.Instance.KerbalCrewHeat;
 		}
 
-		public override void OnCopy(PartModule fromModule)
+		protected override void DoCopy(PartModule fromModule)
 		{
-			Log.dbg("{0}:OnCopy from {1:X}", this.ID, fromModule.part.GetInstanceID());
-			base.OnCopy(fromModule);
-			this.active = (fromModule as KerbalCrewHeat).active;
+			this.totalKerbalHeat = (fromModule as KerbalCrewHeat).totalKerbalHeat;
 		}
 
-		public override void OnLoad(ConfigNode node)
+		protected override void DoSave(KSPe.ConfigNodeWithSteroids node) { }
+		protected override void DoPrefabLoad(KSPe.ConfigNodeWithSteroids node) { }
+		protected override void DoLoad(KSPe.ConfigNodeWithSteroids node) { }
+
+		protected override void DoStart(StartState state)
 		{
-			Log.dbg("{0}:OnLoad {1}", this.ID, null != node);
-			base.OnLoad(node);
-			node.TryGetValue("active", ref this.active);
-		}
-
-		public override void OnSave(ConfigNode node)
-		{
-			Log.dbg("{0}:OnSave {1}", this.ID, null != node);
-			base.OnSave(node);
-			node.SetValue("active", this.active, true);
-		}
-
-		public override void OnActive()
-		{
-			Log.dbg("{0}:OnActive", this.ID);
-			base.OnActive();
-			this.init();
-		}
-
-		public override void OnInitialize()
-		{
-			Log.dbg("{0}:OnInitialize {1} {2} {3} {4}", this.ID, Globals.Instance.KerbalHeatPump, this.enabled, this.active, this.Active);
-			base.OnInitialize();
-		}
-
-		// Needed because I had overriden OnActive.
-		// See https://kerbalspaceprogram.com/api/class_part_module.html#a6f2dd76038326c527e64d2ce96bb45fe
-		public override bool IsStageable() => false;
-
-		public override void OnInactive()
-		{
-			Log.dbg("{0}:OnInactive", this.ID);
-			base.OnInactive();
-			this.deinit();
-		}
-
-		public override void OnStart(StartState state)
-		{
-			Log.dbg("{0}:OnStart.in {1} {2} {3} {4}", this.ID, state, this.enabled, this.active, this.Active);
-			base.OnStart(state);
-
-			this.enabled = state > StartState.Editor;
 			this.CalculateCurrentHeatSurplus();
-
-			Log.dbg("{0}:OnStart.out {1} {2}", this.ID, state, this.Active);
 		}
 
-		private string _getInfo = null;
-		public override string GetInfo()
+		protected override string DoGetInfo()
 		{
-			if (!this.active) return "Disabled.";
-			if (null == this._getInfo)
-			{
-				this._getInfo = string.Format(
-							"Heat per Kerbal: {0}W\n" +
-							"Max Heat: {1}"
-						, Globals.Instance.KerbalHeatPerCrew
-						, Lib.UI.Format(Globals.Instance.KerbalHeatPerCrew * this.part.CrewCapacity, 0, "J")
-					);
-			}
-			return this._getInfo;
+			string r = string.Format(
+						"Heat per Kerbal: {0}W\n" +
+						"Max Heat: {1}"
+					, Globals.Instance.KerbalHeatPerCrew
+					, Lib.UI.Format(Globals.Instance.KerbalHeatPerCrew * this.part.CrewCapacity, 0, "J")
+				);
+			return r;
 		}
 
-		public override void OnFixedUpdate()
+		protected override void DoUpdate() { }
+
+		protected override void DoFixedUpdate()
 		{
-			base.OnFixedUpdate();
-			if (!this.Active) return;
 			this.Active = this.totalKerbalHeat < Lib.Physics.CUTOFF;
 
 			double energyPushed = this.totalKerbalHeat * TimeWarp.fixedDeltaTime;
@@ -170,8 +112,7 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewHeat
 			GameEvents.onVesselCrewWasModified.Remove(this.OnVesselCrewWasModified);
 		}
 
-		private String __ID = null;
-		public String ID => __ID??(__ID = String.Format("{0}:{1:X}", this.name, this.part.GetInstanceID()));
-		private static readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalCrewHeat>("L_Aerospace.Kerbal.Kerbal.CrewHeat", "Module", 0);
+		private static new readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalCrewHeat>("L_Aerospace.Kerbal.Kerbal.CrewHeat", "Module", 0);
+		protected override KSPe.Util.Log.Logger GetLogger() => Log;
 	}
 } } }

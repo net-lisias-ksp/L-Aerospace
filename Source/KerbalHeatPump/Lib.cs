@@ -20,23 +20,23 @@ namespace L_Aerospace.Kerbal.HeatPump
 
 		internal static class Part
 		{
-			internal static ResourceDef[] buildResourceList(PartModule owner, double maxEnergyTransfer, string ID)
+			internal static ResourceDef[] buildResourceList(L_Aerospace.Lib.AbstractPartModule owner, double maxEnergyTransfer)
 			{
 				ResourceDef[] r = ResourceDef.readList(maxEnergyTransfer, owner.part.partInfo.partConfig, owner.GetType().Name).ToArray();
 				if (0 == r.Length)
-					Log.warn("{0}:buildResourceList No Resources found! Deactivating myself...", ID);
+					Log.warn("{0}:buildResourceList No Resources found! Deactivating myself...", owner.ID);
 				else
-					Log.dbg("{0}:buildResourceList Found {1} Resources", ID, r.Length);
+					Log.dbg("{0}:buildResourceList Found {1} Resources", owner.ID, r.Length);
 	#if DEBUG
 				{
 					for (int i = 0; i < r.Length; ++i)
-						Log.dbg("{0}:buildResourceList {1}", ID, r[i]);
+						Log.dbg("{0}:buildResourceList {1}", owner.ID, r[i]);
 				}
 	#endif
 				return r;
 			}
 
-			internal static Dictionary<ResourceDef, ModuleResourceIntake[]> buildIntakeList(PartModule owner, ResourceDef[] resources, string ID)
+			internal static Dictionary<ResourceDef, ModuleResourceIntake[]> buildIntakeList(L_Aerospace.Lib.AbstractPartModule owner, ResourceDef[] resources)
 			{
 				Dictionary<ResourceDef, ModuleResourceIntake[]> r = new Dictionary<ResourceDef, ModuleResourceIntake[]>();
 
@@ -57,9 +57,9 @@ namespace L_Aerospace.Kerbal.HeatPump
 				}
 
 				if (0 == r.Count)
-					Log.warn("{0}:buildIntakeList No Resource Intakes found! Deactivating myself...", ID);
+					Log.warn("{0}:buildIntakeList No Resource Intakes found! Deactivating myself...", owner.ID);
 				else
-					Log.dbg("{0}:buildIntakeList Found {1} Resource Intakes", ID, r.Count);
+					Log.dbg("{0}:buildIntakeList Found {1} Resource Intakes", owner.ID, r.Count);
 
 				return r;
 			}

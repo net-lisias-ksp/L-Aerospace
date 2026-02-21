@@ -59,6 +59,8 @@
     <Compile Include="Controller\AnimateGeneric.cs" />
     <Compile Include="Controller\ControlSurface.cs" />
     <Compile Include="Controller\ResourceIntake.cs" />
+    <Compile Include="Lib\AbstractPartModule.cs" />
+    <Compile Include="Lib\AbstractPartModuleAutoActivable.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Lib\" />

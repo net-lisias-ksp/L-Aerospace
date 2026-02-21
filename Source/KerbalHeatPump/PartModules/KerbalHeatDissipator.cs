@@ -23,17 +23,9 @@ using System.Collections.Generic;
 
 namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 {
-	public class KerbalHeatDissipator : PartModule
+	public class KerbalHeatDissipator : L_Aerospace.Lib.AbstractPartModuleAutoActivable
 	{
-		private bool active = false;
-		public bool Active
-		{
-			get => Globals.Instance.KerbalHeatPump && this.active && this.enabled;
-			internal set
-			{
-				this.enabled = this.isEnabled = value;
-			}
-		}
+		public bool Ready => null != this.vesselModule && this.Active;
 
 		[KSPField (isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Heat Exchange")]
 		[UI_Toggle (disabledText = "#autoLOC_900890", scene = UI_Scene.All, enabledText = "#autoLOC_900889", affectSymCounterparts = UI_Scene.All)]
@@ -52,10 +44,9 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		#region KSP Life Cycle
 
-		public override void OnAwake()
+		protected override void DoAwake()
 		{
-			Log.dbg("{0}:OnAwake", this.ID);
-			base.OnAwake();
+			this.hardActive = Globals.Instance.KerbalHeatPump;
 			{
 				BaseField field = Fields["maxEnergyTransfer"];
 				field.OnValueModified += this.OnMaxEnergyTransfer;
@@ -63,117 +54,67 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			}
 		}
 
-		public override void OnCopy(PartModule fromModule)
+		protected override void DoCopy(PartModule fromModule)
 		{
-			Log.dbg("{0}:OnCopy from {1:X}", this.ID, fromModule.part.GetInstanceID());
-			base.OnCopy(fromModule);
-			this.active = (fromModule as KerbalHeatDissipator).active;
 			this.heatExchangeEnabled = (fromModule as KerbalHeatDissipator).heatExchangeEnabled;
 			this.maxEnergyTransfer = (fromModule as KerbalHeatDissipator).maxEnergyTransfer;
 			this.resources = (fromModule as KerbalHeatDissipator).resources;
+
+			// These guys are tied to their original Part, I can't just copy them to this one!
+			this.intakes = Lib.Part.buildIntakeList(this, this.resources);
 		}
 
-		public override void OnLoad(ConfigNode node)
+		protected override void DoSave(KSPe.ConfigNodeWithSteroids node) { }
+		protected override void DoPrefabLoad(KSPe.ConfigNodeWithSteroids node) { }
+		protected override void DoLoad(KSPe.ConfigNodeWithSteroids node)
 		{
-			Log.dbg("{0}:OnLoad {1}", this.ID, null != node);
-			base.OnLoad(node);
-			node.TryGetValue("active", ref this.active);
-
-			if (null == this.part.partInfo) return;
-
-			this.resources = Lib.Part.buildResourceList(this, this.maxEnergyTransfer, this.ID);
-			this.intakes = Lib.Part.buildIntakeList(this, this.resources, this.ID);
+			this.resources = Lib.Part.buildResourceList(this, this.maxEnergyTransfer);
+			this.intakes = Lib.Part.buildIntakeList(this, this.resources);
 		}
 
-		public override void OnSave(ConfigNode node)
+		protected override void DoStart(StartState state)
 		{
-			Log.dbg("{0}:OnSave {1}", this.ID, null != node);
-			base.OnSave(node);
-			node.SetValue("active", this.active, true);
-		}
-
-		public override void OnInitialize()
-		{
-			Log.dbg("{0}:OnInitialize {1} {2} {3} {4}", this.ID, Globals.Instance.KerbalHeatPump, this.enabled, this.active, this.Active);
-			base.OnInitialize();
-
-			if (
-					this.enabled
-					&& !this.IsStageable()	// Rationale: stageable parts should obey the stage rules,
-											// but we also need the "Active" life cycle nevertheless - so we force the activation
-											// only if the part is not stageable.
-				)
-				this.part.force_activate(); // This will activate the OnFixedUpdate
-		}
-
-		public override void OnActive()
-		{
-			Log.dbg("{0}:OnActive", this.ID);
-			base.OnActive();
-		}
-
-		// Needed because I had overriden OnActive.
-		// See https://kerbalspaceprogram.com/api/class_part_module.html#a6f2dd76038326c527e64d2ce96bb45fe
-		public override bool IsStageable() => false;
-
-		public override void OnInactive()
-		{
-			Log.dbg("{0}:OnInactive", this.ID);
-			base.OnInactive();
-		}
-
-		public override void OnStart(StartState state)
-		{
-			Log.dbg("{0}:OnStart.in {1} {2} {3} {4}", this.ID, state, this.enabled, this.active, this.Active);
-			base.OnStart(state);
-
-			this.enabled = state > StartState.Editor;
 			this.vesselModule = Controller.GetModule(this.vessel);
 			this.Active = 0 != this.resources.Length;
 			this.Active &= 0 != this.intakes.Count;
-
-			Log.dbg("{0}:OnStart.out {1} {2}", this.ID, state, this.Active);
+			if (this.Ready) this.vesselModule.Announce(this);
 		}
 
-		private string _getInfo = null;
-		public override string GetInfo()
+		protected override string DoGetInfo()
 		{
-			if (!this.active) return "Disabled.";
-			if (null == this._getInfo)
+			string r = string.Format(
+						"Max Energy Transfer : {0}kW"
+					, this.maxEnergyTransfer
+				);
+			if (this.resources.Length > 0)
 			{
-				this._getInfo = string.Format(
-							"Max Energy Transfer : {0}kW"
-						, this.maxEnergyTransfer
-					);
-				if (this.resources.Length > 0)
+				r += "\n<b>Consumables</b>";
+				for (int i = 0; i < this.resources.Length; ++i)
 				{
-					this._getInfo += "\n<b>Consumables</b>";
-					for (int i = 0; i < this.resources.Length; ++i)
-					{
-						if (this.resources[i].ratio > 0)
-							this._getInfo += string.Format(
-									"\n\t{0} : {1} {2}"
-								, this.resources[i].name
-								, this.resources[i].ratio*this.resources[i].def.density*1000
-								, "kG/J" 
-							);
-						if (this.resources[i].hsp > 0)
-							this._getInfo += string.Format(
-									"\n\t{0} : {1} {2}"
-								, this.resources[i].name
-								, this.resources[i].hsp
-								, "J/(kG°K)" 
-							);
-					}
+					if (this.resources[i].ratio > 0)
+						r += string.Format(
+								"\n\t{0} : {1} {2}"
+							, this.resources[i].name
+							, this.resources[i].ratio*this.resources[i].def.density*1000
+							, "kG/J" 
+						);
+					if (this.resources[i].hsp > 0)
+						r += string.Format(
+								"\n\t{0} : {1} {2}"
+							, this.resources[i].name
+							, this.resources[i].hsp
+							, "J/(kG°K)" 
+						);
 				}
 			}
-			return this._getInfo;
+			return r;
 		}
 
-		public override void OnFixedUpdate()
+		protected override void DoUpdate() { }
+
+		protected override void DoFixedUpdate()
 		{
-			base.OnFixedUpdate();
-			if (!(this.Active && this.heatExchangeEnabled)) return;
+			if (!this.heatExchangeEnabled) return;
 
 			// Pegar temperatura do ambiente. Essa eh temperatura do resource being scoped.
 			// multiplicar pela thermalmass para saber qual o bottom line que a parte pode chegar
@@ -241,13 +182,12 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			float v = (float)this.maxEnergyTransfer * (float)value;
 			BaseField field = Fields["maxEnergyTransfer"];
 			field.guiName = string.Format("Heat EXCH THR: {0}", L_Aerospace.Lib.UI.Format(v, 0, "J"));
-			this._getInfo = null; // Forces GetInfo to be regenerated.
+			this.ResetInfo(); // Forces GetInfo to be regenerated.
 		}
 
 		#endregion
 
-		private String __ID = null;
-		public String ID => __ID??(__ID = String.Format("{0}:{1:X}", this.name, this.part.GetInstanceID()));
-		private static readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalHeatDissipator>("L_Aerospace.Kerbal.HeatPump", "Dissipator", 0);
+		private static new readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalHeatDissipator>("L_Aerospace.Kerbal.HeatPump", "Dissipator", 0);
+		protected override KSPe.Util.Log.Logger GetLogger() => Log;
 	}
 } } }

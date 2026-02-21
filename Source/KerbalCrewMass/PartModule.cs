@@ -25,104 +25,51 @@ using UnityEngine;
 
 namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 {
-	public class KerbalCrewMass : PartModule, IPartMassModifier
+	public class KerbalCrewMass : L_Aerospace.Lib.AbstractPartModule, IPartMassModifier
 	{
-		private bool active = false;
-		public bool Active
-		{
-			get => Globals.Instance.KerbalCrewMass & this.active && this.enabled;
-			internal set
-			{
-				this.enabled = this.isEnabled = value;
-			}
-		}
-
 		private float massSurplus;
 
 		#region KSP Life Cycle
 
-		public override void OnAwake()
+		protected override void DoAwake()
 		{
-			Log.dbg("{0}:OnAwake", this.ID);
-			base.OnAwake();
+			this.hardActive = Globals.Instance.KerbalCrewMass;
 		}
 
-		public override void OnCopy(PartModule fromModule)
+		protected override void DoCopy(PartModule fromModule)
 		{
-			Log.dbg("{0}:OnCopy from {1:X}", this.ID, fromModule.part.GetInstanceID());
-			base.OnCopy(fromModule);
-			this.active = (fromModule as KerbalCrewMass).active;
+			this.massSurplus = (fromModule as KerbalCrewMass).massSurplus;
 		}
 
-		public override void OnLoad(ConfigNode node)
+		protected override void DoSave(KSPe.ConfigNodeWithSteroids node) { }
+		protected override void DoPrefabLoad(KSPe.ConfigNodeWithSteroids node) { }
+		protected override void DoLoad(KSPe.ConfigNodeWithSteroids node)
 		{
-			Log.dbg("{0}:OnLoad {1}", this.ID, null != node);
-			base.OnLoad(node);
-			node.TryGetValue("active", ref this.active);
-
 			// Without this, there's no reason to waste our time here!
+			this.Active = this.part.CrewCapacity > 0;
 			// For future reference:
 			//		kerbalCrewMass = 0.09375  // Full equiped Kerbal (Parachute and JetPack)
 			//		kerbalCrewMass = 0.045    // Only the Kerbal
 		}
 
-		public override void OnSave(ConfigNode node)
+		protected override void DoStart(StartState state)
 		{
-			Log.dbg("{0}:OnSave {1}", this.ID, null != node);
-			base.OnSave(node);
-			node.SetValue("active", this.active, true);
-		}
-
-		public override void OnInitialize()
-		{
-			Log.dbg("{0}:OnInitialize {1} {2} {3} {4}", this.ID, Globals.Instance.KerbalHeatPump, this.enabled, this.active, this.Active);
-			base.OnInitialize();
-		}
-
-		public override void OnActive()
-		{
-			Log.dbg("{0}:OnActive", this.ID);
-			base.OnActive();
-			this.init();
-		}
-
-		// Needed because I had overriden OnActive.
-		// See https://kerbalspaceprogram.com/api/class_part_module.html#a6f2dd76038326c527e64d2ce96bb45fe
-		public override bool IsStageable() => false;
-
-		public override void OnInactive()
-		{
-			Log.dbg("{0}:OnInactive", this.ID);
-			base.OnInactive();
-			this.deinit();
-		}
-
-		public override void OnStart(StartState state)
-		{
-			Log.dbg("{0}:OnStart.in {1} {2} {3} {4}", this.ID, state, this.enabled, this.active, this.Active);
-			base.OnStart(state);
-
-			this.enabled = state > StartState.Editor;
 			this.CalculateCurrentMassSurplus();
-
-			Log.dbg("{0}:OnStart.out {1} {2}", this.ID, state, this.Active);
 		}
 
-		private string _getInfo = null;
-		public override string GetInfo()
+		protected override string DoGetInfo()
 		{
-			if (!this.active) return "Disabled.";
-			if (null == this._getInfo)
-			{
-				this._getInfo = string.Format(
-							"Mass per Kerbal: {0}kG\n"
-							+ "Max Crew Mass: {1}kG"
-						, PhysicsGlobals.KerbalCrewMass
-						, PhysicsGlobals.KerbalCrewMass * this.part.CrewCapacity
-					);
-			}
-			return this._getInfo;
+			string r = string.Format(
+						"Mass per Kerbal: {0}kG\n"
+						+ "Max Crew Mass: {1}kG"
+					, PhysicsGlobals.KerbalCrewMass
+					, PhysicsGlobals.KerbalCrewMass * this.part.CrewCapacity
+				);
+			return r;
 		}
+
+		protected override void DoUpdate() { }
+		protected override void DoFixedUpdate() { }
 
 		#endregion
 
@@ -164,8 +111,7 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 		float IPartMassModifier.GetModuleMass(float defaultMass, ModifierStagingSituation sit) => this.Active ? this.massSurplus : 0;
 		ModifierChangeWhen IPartMassModifier.GetModuleMassChangeWhen() => ModifierChangeWhen.FIXED;
 
-		private String __ID = null;
-		public String ID => __ID??(__ID = String.Format("{0}:{1:X}", this.name, this.part.GetInstanceID()));
-		private static readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalCrewMass>("L_Aerospace.Kerbal.Kerbal.CrewMass", "Module", 0);
+		private static new readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalCrewMass>("L_Aerospace.Kerbal.Kerbal.CrewMass", "Module", 0);
+		protected override KSPe.Util.Log.Logger GetLogger() => Log;
 	}
 } } }
