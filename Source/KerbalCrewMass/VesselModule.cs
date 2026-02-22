@@ -29,7 +29,6 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 
 		#region KSP Life Cycle
 
-		protected override void DoAwake() { }
 		protected override void DoLoadVessel() => this.hardActive = Globals.Instance.KerbalCrewMass;
 		protected override void DoStart() => this.populate();
 		protected override void DoGoOnRails() => this.list.Clear();
@@ -40,10 +39,7 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 			this.Active = this.list.Count > 0;
 		}
 
-		protected override void DoUnloadVessel() { }
-
 		protected override void DoVesselChange(Vessel vessel) => this.populate();
-		protected override void DoEditorShipModified(ShipConstruct data) { }
 
 		#endregion
 

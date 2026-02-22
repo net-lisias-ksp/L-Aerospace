@@ -29,13 +29,9 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		#region KSP Life Cycle
 
-		protected override void DoAwake() { }
 		protected override void DoLoadVessel() => this.hardActive = Globals.Instance.KerbalCrewMass;
 
-		protected override void DoStart()
-		{
-			this.populate();
-		}
+		protected override void DoStart() => this.populate();
 
 		protected override void DoGoOnRails()
 		{
@@ -44,13 +40,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			this.registry.Clear();
 		}
 
-		protected override void DoGoOffRails()
-		{
-			this.populate();
-		}
-
-		protected override void DoUnloadVessel() { }
-
+		protected override void DoGoOffRails() => this.populate();
 		protected override void DoVesselChange(Vessel data) => this.repopulate();
 		protected override void DoEditorShipModified(ShipConstruct data) => this.repopulate();
 

@@ -22,7 +22,32 @@ using System;
 
 namespace L_Aerospace.Lib
 {
-	public abstract class AbstractVesselModule : VesselModule
+	/*
+		"Wunderbar"!! /s
+
+		I can't make AbstractVesselModule... abstract... because someone, somewhere, some time ago decided it would be a good
+		idea to pre instantiate everything descending from VesselModule without caring if the damned thing is instantiable or not!
+
+		This is what you get from KSP.log if you try this stunt:
+
+		[LOG 06:21:02.440] Can't add script behaviour . The script class can't be abstract!
+		[EXC 06:21:02.440] NullReferenceException: Object reference not set to an instance of an object
+			VesselModuleManager.AddModulesToVessel (.Vessel vessel, System.Collections.Generic.List`1 modules)
+			Vessel.Awake ()
+			UnityEngine.GameObject:AddComponent()
+			ProtoVessel:Load(FlightState, Vessel)
+			ProtoVessel:Load(FlightState)
+			FlightState:Load()
+			Game:Load()
+			<Start>c__Iterator0:MoveNext()
+			UnityEngine.SetupCoroutine:InvokeMoveNext(IEnumerator, IntPtr)
+
+		Yeah, right.
+
+		So now this "abstract" class is instantiable to prevent KSP from shooting his own feet. Crap.
+	 */
+	//public abstract class AbstractVesselModule : VesselModule
+	public class AbstractVesselModule : VesselModule
 	{
 		protected bool hardActive = true;	// In Kraken, we trust! :)
 		public bool Active
@@ -92,26 +117,25 @@ namespace L_Aerospace.Lib
 
 		#region My Internal Call Backs
 
-		protected abstract void DoAwake();
-		protected abstract void DoLoadVessel();
-		protected abstract void DoStart();
-		protected abstract void DoGoOnRails();
-		protected abstract void DoGoOffRails();
-		protected abstract void DoUnloadVessel();
+		protected virtual void DoAwake() { }
+		protected virtual void DoLoadVessel() { }
+		protected virtual void DoStart() { }
+		protected virtual void DoGoOnRails() { }
+		protected virtual void DoGoOffRails() { }
+		protected virtual void DoUnloadVessel() { }
 
-		protected abstract void DoVesselChange(Vessel vessel);
-		protected abstract void DoEditorShipModified(ShipConstruct shipContruct);
+		protected virtual void DoVesselChange(Vessel vessel) { }
+		protected virtual void DoEditorShipModified(ShipConstruct shipContruct) { }
 
 		#endregion
 
 		private void OnVesselChange(Vessel vessel) => this.DoVesselChange(vessel);
 		private void OnEditorShipModified(ShipConstruct shipContruct) => this.DoEditorShipModified(shipContruct);
 
-
-		private String __ID = null;
-		public String ID => __ID??(__ID = String.Format("{0}:{1:X}", this.name, this.vessel?.vesselName ?? "NOVESSEL", this.vessel.GetInstanceID()));
+		private string __ID = null;
+		public string ID => __ID??(__ID = String.Format("{0}:{1:X}", this.name, this.vessel?.vesselName??"NOVESSEL", this.vessel.GetInstanceID()));
 		protected readonly KSPe.Util.Log.Logger Log;
-		protected abstract KSPe.Util.Log.Logger GetLogger();
+		protected virtual KSPe.Util.Log.Logger GetLogger() => new KSPe.Util.Log.DummyLogger();	// You **SHOULD** override this method with a logger of your own. Good look trying to figure it out if you forget it... :/
 		protected AbstractVesselModule() : base() => this.Log = this.GetLogger();
 	}
 }
