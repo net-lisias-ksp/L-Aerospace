@@ -23,79 +23,29 @@ using System.Collections.Generic;
 
 namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 {
-	public class Controller : VesselModule
+	public class Controller : L_Aerospace.Lib.AbstractVesselModule
 	{
-		public bool Active
-		{
-			get => this.enabled;
-			private set
-			{
-				this.enabled = value;
-			}
-		}
-
 		private readonly List<KerbalCrewMass> list = new List<KerbalCrewMass>();
 
 		#region KSP Life Cycle
 
-		protected override void OnAwake()
-		{
-			Log.dbg("{0}:OnAwake", this.name);	// prevents a NRE due this.vessel.GetInstaceId not working yet.
-			base.OnAwake();
-		}
+		protected override void DoAwake() { }
+		protected override void DoLoadVessel() => this.hardActive = Globals.Instance.KerbalCrewMass;
+		protected override void DoStart() => this.populate();
+		protected override void DoGoOnRails() => this.list.Clear();
 
-		protected override void OnStart()
-		{
-			Log.dbg("{0}:OnStart", this.ID);
-			base.OnStart();
-			this.populate();
-		}
-
-		public override void OnGoOnRails()
-		{
-			Log.dbg("{0}:OnGoOnRails {1}", this.ID, this.Active);
-			base.OnGoOnRails();
-			this.list.Clear();
-		}
-
-		public override void OnGoOffRails()
-		{
-			Log.dbg("{0}:OnGoOffRails {1}", this.ID, this.Active);
-			base.OnGoOffRails();
-			this.populate();
-			this.Active = Globals.Instance.KerbalCrewMass;
-		}
-
-		public override void OnLoadVessel()
-		{
-			Log.dbg("{0}:OnLoadVessel", this.name, this.vessel.GetInstanceID());
-			base.OnLoadVessel();
-			GameEvents.onVesselChange.Add(this.OnVesselChange);
-		}
-
-		public override void OnUnloadVessel()
-		{
-			Log.dbg("{0}:OnUnloadVessel", this.name, this.vessel.GetInstanceID());
-			base.OnUnloadVessel();
-			GameEvents.onVesselChange.Remove(this.OnVesselChange);
-		}
-
-		private void OnVesselChange(Vessel data)
+		protected override void DoGoOffRails()
 		{
 			this.populate();
+			this.Active = this.list.Count > 0;
 		}
+
+		protected override void DoUnloadVessel() { }
+
+		protected override void DoVesselChange(Vessel vessel) => this.populate();
+		protected override void DoEditorShipModified(ShipConstruct data) { }
 
 		#endregion
-
-
-		internal void Activate() => this.setActive(true);
-		internal void Deactivate() => this.setActive(false);
-
-		private void setActive(bool value)
-		{
-			for(int i = 0; i < this.list.Count; ++i)
-				this.list[i].Active = value;
-		}
 
 		private void populate()
 		{
@@ -109,8 +59,7 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 			}
 		}
 
-		private String __ID = null;
-		public String ID => __ID??(__ID = String.Format("{0}:{1:X}", this.name, this.vessel.GetInstanceID()));
-		private static readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<Controller>("L_Aerospace.Kerbal.CrewMass", "Controller", 0);
+		private static new readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<Controller>("L_Aerospace.Kerbal.CrewMass", "Controller", 0);
+		protected override KSPe.Util.Log.Logger GetLogger() => Log;
 	}
 } } }

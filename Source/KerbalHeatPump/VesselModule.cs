@@ -23,82 +23,57 @@ using System.Collections.Generic;
 
 namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 {
-	public class Controller : VesselModule
+	public class Controller : L_Aerospace.Lib.AbstractVesselModule
 	{
 		private readonly List<KerbalHeatSink> list = new List<KerbalHeatSink>();
 
 		#region KSP Life Cycle
 
-		protected override void OnAwake()
-		{
-			Log.dbg("{0}:OnAwake", this.name);	// prevents a NRE due this.vessel.GetInstaceId not working yet.
-			base.OnAwake();
-		}
+		protected override void DoAwake() { }
+		protected override void DoLoadVessel() => this.hardActive = Globals.Instance.KerbalCrewMass;
 
-		public override void OnLoadVessel()
+		protected override void DoStart()
 		{
-			Log.dbg("{0}:OnLoadVessel", this.ID);
-			base.OnLoadVessel();
-			GameEvents.onVesselChange.Add(this.OnVesselChange);
-			GameEvents.onEditorShipModified.Add(this.OnEditorShipModified);
-		}
-
-		protected override void OnStart()
-		{
-			Log.dbg("{0}:OnStart {1}", this.ID, this.enabled);
-			base.OnStart();
 			this.populate();
-			this.enabled = this.Enabled;
 		}
 
-		public override void OnGoOnRails()
+		protected override void DoGoOnRails()
 		{
-			Log.dbg("{0}:OnGoOnRails {1}", this.ID, this.enabled);
-			base.OnGoOnRails();
-			this.list.Clear();
+			this.partsWithSinker.Clear();
+			this.heatSinkers.Clear();
+			this.registry.Clear();
 		}
 
-		public override void OnGoOffRails()
+		protected override void DoGoOffRails()
 		{
-			Log.dbg("{0}:OnGoOnRails {1}", this.ID, this.enabled);
-			base.OnGoOffRails();
 			this.populate();
-			this.enabled = this.Enabled;
 		}
 
-		public override void OnUnloadVessel()
-		{
-			Log.dbg("{0}:OnUnloadVessel", this.ID);
-			base.OnUnloadVessel();
-			GameEvents.onEditorShipModified.Remove(this.OnEditorShipModified);
-			GameEvents.onVesselChange.Remove(this.OnVesselChange);
-		}
+		protected override void DoUnloadVessel() { }
 
-		private void OnVesselChange(Vessel data) => this.populate();
-		private void OnEditorShipModified(ShipConstruct data) => this.populate();
+		protected override void DoVesselChange(Vessel data) => this.repopulate();
+		protected override void DoEditorShipModified(ShipConstruct data) => this.repopulate();
 
 		#endregion
 
-		public bool Enabled => Globals.Instance.KerbalCrewMass;
-
 		public double PumpHeat(double energy)
 		{
-			int count = this.list.Count;
+			int count = this.heatSinkers.Count;
+
 			Log.dbg("{0}:PumpHeat Trying {1} on {2} sinkers.", this.ID, energy, count);
 			if (count < 1) return double.NaN; // Ugly hack, but returning negative numbers are even worst due collateral effects. Better to blow up things early.
 
-			int passes = this.list.Count;
+			int passes = count;
 			double sunkEnergy = 0;
 			while (passes > 0 && energy - sunkEnergy > Lib.Physics.CUTOFF)
 			{	// If some sinker fail us, let's keep trying the other ones hoping they can absorb the remaining energy.
 				double energyPerSink = energy / passes;
 				for (int i = 0; i < count; ++i)
 				{
-					sunkEnergy += this.list[i].SinkHeat(energyPerSink);	// Ignore if the Sink is active or not, inactive Sinks will just return 0
+					sunkEnergy += this.heatSinkers[i].SinkHeat(energyPerSink);	// Ignore if the Sink is active or not, inactive Sinks will just return 0
 					passes -= 1;
 				}
 			}	// At this point, there's nothing left to be tried. Whatever happens, happens.
-
 			Log.dbg("{0}:PumpHeat Sunk {1} on {2} sinkers.", this.ID, sunkEnergy, count);
 			return sunkEnergy;
 		}
@@ -125,8 +100,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				return vessel.vesselModules[i] as Controller;
 			throw new EntryPointNotFoundException(typeof(Controller).FullName);
 		}
-		private String __ID = null;
-		public String ID => __ID??(__ID = String.Format("{0}:{1:X}", this.name, this.vessel.GetInstanceID()));
-		private static readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalHeatExchanger>("L_Aerospace.Kerbal.HeatPump", "Controller", 0);
+
+		private static new readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalHeatExchanger>("L_Aerospace.Kerbal.HeatPump", "Controller", 0);
+		protected override KSPe.Util.Log.Logger GetLogger() => Log;
 	}
 } } }

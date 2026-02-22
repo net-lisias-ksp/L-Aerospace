@@ -23,69 +23,37 @@ using System.Collections.Generic;
 
 namespace L_Aerospace { namespace Kerbal { namespace CrewHeat
 {
-	public class Controller : VesselModule
+	public class Controller : L_Aerospace.Lib.AbstractVesselModule
 	{
-		public bool Active
-		{
-			get => this.enabled;
-			private set
-			{
-				this.enabled = value;
-			}
-		}
-
 		private readonly List<KerbalCrewHeat> list = new List<KerbalCrewHeat>();
 
 		#region KSP Life Cycle
 
-		protected override void OnAwake()
-		{
-			Log.dbg("{0}:OnAwake", this.name);	// prevents a NRE due this.vessel.GetInstaceId not working yet.
-			base.OnAwake();
-		}
+		protected override void DoAwake() { }
+		protected override void DoLoadVessel() => this.hardActive = Globals.Instance.KerbalCrewHeat;
 
-		protected override void OnStart()
+		protected override void DoStart()
 		{
-			Log.dbg("{0}:OnStart", this.ID);
-			base.OnStart();
 			this.populate();
 			this.Active = this.list.Count > 0;
 		}
 
-		public override void OnGoOnRails()
+		protected override void DoGoOnRails()
 		{
-			Log.dbg("{0}:OnGoOnRails {1}", this.ID, this.Active);
-			base.OnGoOnRails();
 			this.list.Clear();
 			this.Active = this.list.Count > 0;
 		}
 
-		public override void OnGoOffRails()
-		{
-			Log.dbg("{0}:OnGoOffRails {1}", this.ID, this.Active);
-			base.OnGoOffRails();
-			this.populate();
-			this.Active = Globals.Instance.KerbalCrewMass && this.list.Count > 0;
-		}
-
-		public override void OnLoadVessel()
-		{
-			Log.dbg("{0}:OnLoadVessel", this.name, this.vessel.GetInstanceID());
-			base.OnLoadVessel();
-			GameEvents.onVesselChange.Add(this.OnVesselChange);
-		}
-
-		public override void OnUnloadVessel()
-		{
-			Log.dbg("{0}:OnUnloadVessel", this.name, this.vessel.GetInstanceID());
-			base.OnUnloadVessel();
-			GameEvents.onVesselChange.Remove(this.OnVesselChange);
-		}
-
-		private void OnVesselChange(Vessel data)
+		protected override void DoGoOffRails()
 		{
 			this.populate();
+			this.Active = this.list.Count > 0;
 		}
+
+		protected override void DoUnloadVessel() { }
+
+		protected override void DoVesselChange(Vessel vessel) => this.populate();
+		protected override void DoEditorShipModified(ShipConstruct data) { }
 
 		#endregion
 
@@ -101,8 +69,7 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewHeat
 			}
 		}
 
-		private String __ID = null;
-		public String ID => __ID??(__ID = String.Format("{0}:{1:X}", this.name, this.vessel.GetInstanceID()));
-		private static readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<Controller>("L_Aerospace.Kerbal.CrewHeat", "Controller", 0);
+		private static new readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<Controller>("L_Aerospace.Kerbal.CrewHeat", "Controller", 0);
+		protected override KSPe.Util.Log.Logger GetLogger() => Log;
 	}
 } } }
