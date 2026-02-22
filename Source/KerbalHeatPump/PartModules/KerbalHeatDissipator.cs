@@ -78,7 +78,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		protected override void DoStart(StartState state)
 		{
-			this.vesselModule = Controller.GetModule(this.part.vessel);
+			this.vesselModule = Controller.GetVesselModule(this);
 			this.Active = 0 != this.resources.Length;
 			this.Active &= 0 != this.intakes.Count;
 			if (this.Ready) this.vesselModule.Announce(this);

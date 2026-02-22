@@ -80,7 +80,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		protected override void DoStart(StartState state)
 		{
 			this.OnThresholdRatioChanged(this.thresholdRatio);
-			this.vesselModule = Controller.GetModule(this.vessel);
+			this.vesselModule = Controller.GetVesselModule(this);
 			this.Active = 0 != this.resources.Length;
 		}
 

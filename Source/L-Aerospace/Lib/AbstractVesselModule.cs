@@ -45,6 +45,8 @@ namespace L_Aerospace.Lib
 		Yeah, right.
 
 		So now this "abstract" class is instantiable to prevent KSP from shooting his own feet. Crap.
+
+		On the less dark side, at least the extending classes will not need to implement dummy methods for what they don't want to use.
 	 */
 	//public abstract class AbstractVesselModule : VesselModule
 	public class AbstractVesselModule : VesselModule

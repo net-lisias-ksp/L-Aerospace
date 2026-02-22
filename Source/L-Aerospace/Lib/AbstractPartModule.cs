@@ -110,12 +110,12 @@ namespace L_Aerospace.Lib
 
 		public sealed override void OnStartFinished (StartState state)
 		{
-			Log.dbg("{0}:OnStartFinished .in {1} {2} {3} {4}", this.ID, state, this.enabled, this.hardActive, this.Active);
+			Log.dbg("{0}:OnStartFinished.in {1} {2} {3} {4}", this.ID, state, this.enabled, this.hardActive, this.Active);
 			base.OnStart(state);
 
 			this.DoStartFinished(state);
 
-			Log.dbg("{0}:OnStartFinished .out {1} {2}", this.ID, state, this.Active);
+			Log.dbg("{0}:OnStartFinished.out {1} {2}", this.ID, state, this.Active);
 		}
 
 		private string _getInfo = null;

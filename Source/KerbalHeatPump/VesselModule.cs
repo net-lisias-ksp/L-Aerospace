@@ -81,13 +81,13 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			Log.dbg("{0}:populate Found {1} Heat Sinkers.", this.ID, this.list.Count);
 		}
 
-		internal static Controller GetModule(Vessel vessel)
+		internal static Controller GetVesselModule(PartModule partModule)
 		{
-			if (null == vessel) return null; // Usefull to save some code from the caller when there's no vessel active, as on LoadingScreen.
+			if (null == partModule.part.vessel) return null; // Usefull to save some code from the caller when there's no vessel active, as on LoadingScreen.
 
-			int count = vessel.vesselModules.Count;
-			for (int i = 0; i < count; ++i) if (vessel.vesselModules[i] is Controller)
-				return vessel.vesselModules[i] as Controller;
+			int count = partModule.part.vessel.vesselModules.Count;
+			for (int i = 0; i < count; ++i) if (partModule.part.vessel.vesselModules[i] is Controller)
+				return partModule.part.vessel.vesselModules[i] as Controller;
 			throw new EntryPointNotFoundException(typeof(Controller).FullName);
 		}
 
