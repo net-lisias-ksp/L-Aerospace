@@ -36,6 +36,8 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewHeat
 			this.hardActive = Globals.Instance.KerbalCrewHeat;
 		}
 
+		protected override void DoWillBeCopied (bool asSymCounterpart) { }
+		protected override void DoWasCopied(PartModule copyPartModule, bool asSymCounterpart)  { }
 		protected override void DoCopy(PartModule fromModule)
 		{
 			this.totalKerbalHeat = (fromModule as KerbalCrewHeat).totalKerbalHeat;
@@ -49,6 +51,8 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewHeat
 		{
 			this.CalculateCurrentHeatSurplus();
 		}
+
+		protected override void DoStartFinished(StartState state) { }
 
 		protected override string DoGetInfo()
 		{

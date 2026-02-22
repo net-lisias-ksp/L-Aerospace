@@ -36,7 +36,9 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 			this.hardActive = Globals.Instance.KerbalCrewMass;
 		}
 
-		protected override void DoCopy(PartModule fromModule)
+		protected override void DoWillBeCopied (bool asSymCounterpart) { }
+		protected override void DoWasCopied(PartModule copyPartModule, bool asSymCounterpart)  { }
+		protected override void DoCopy(PartModule fromModule) 
 		{
 			this.massSurplus = (fromModule as KerbalCrewMass).massSurplus;
 		}
@@ -56,6 +58,8 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 		{
 			this.CalculateCurrentMassSurplus();
 		}
+
+		protected override void DoStartFinished(StartState state) { }
 
 		protected override string DoGetInfo()
 		{

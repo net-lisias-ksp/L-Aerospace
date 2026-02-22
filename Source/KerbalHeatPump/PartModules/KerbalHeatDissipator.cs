@@ -39,6 +39,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		protected double maxEnergyTransfer = 7500;
 
 		private Controller vesselModule;
+		internal double MaxEnergyTransfer => this.maxEnergyTransfer;
+
 		private ResourceDef[] resources = new ResourceDef[0];
 		private Dictionary<ResourceDef,ModuleResourceIntake[]> intakes = new Dictionary<ResourceDef, ModuleResourceIntake[]>();
 
@@ -54,6 +56,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			}
 		}
 
+		protected override void DoWillBeCopied (bool asSymCounterpart) { }
+		protected override void DoWasCopied(PartModule copyPartModule, bool asSymCounterpart)  { }
 		protected override void DoCopy(PartModule fromModule)
 		{
 			this.heatExchangeEnabled = (fromModule as KerbalHeatDissipator).heatExchangeEnabled;
@@ -74,11 +78,13 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		protected override void DoStart(StartState state)
 		{
-			this.vesselModule = Controller.GetModule(this.vessel);
+			this.vesselModule = Controller.GetModule(this.part.vessel);
 			this.Active = 0 != this.resources.Length;
 			this.Active &= 0 != this.intakes.Count;
 			if (this.Ready) this.vesselModule.Announce(this);
 		}
+
+		protected override void DoStartFinished(StartState state) { }
 
 		protected override string DoGetInfo()
 		{
@@ -140,8 +146,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				ResourceDef r = this.resources[i];
 
 				// Only the coolant in the part is accountable for thermal transfer! Heat Dissipators don't work remotely! :)
-				double energy;
-				double coollantThresholdRatio = this.coollantThresholdRatio;
+				double energy, coollantThresholdRatio;
 				if (this.intakes.ContainsKey(r))
 				{
 					energy = 0;

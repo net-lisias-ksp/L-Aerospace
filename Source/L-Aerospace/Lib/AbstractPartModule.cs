@@ -47,13 +47,27 @@ namespace L_Aerospace.Lib
 			this.DoAwake();
 		}
 
-		public sealed override void OnCopy(PartModule fromModule)
+		public sealed override void OnWillBeCopied (bool asSymCounterpart)
+		{
+			Log.dbg("{0}:OnWillBeCopied asSym={1}", this.ID, asSymCounterpart);
+			base.OnWillBeCopied(asSymCounterpart);
+			this.DoWillBeCopied(asSymCounterpart);
+		}
+
+		public sealed override void OnCopy (PartModule fromModule)
 		{
 			this.__ID = null;
 			Log.dbg("{0}:OnCopy from {1:X}", this.ID, fromModule.part.GetInstanceID());
 			base.OnCopy(fromModule);
 			this.softActive = (fromModule as AbstractPartModule).softActive;
 			this.DoCopy(fromModule);
+		}
+
+		public sealed override void OnWasCopied (PartModule copyPartModule, bool asSymCounterpart)
+		{
+			Log.dbg("{0}:OnWasCopied from {1:X} asSym={2}", this.ID, copyPartModule.part.GetInstanceID(), asSymCounterpart);
+			base.OnWasCopied(copyPartModule, asSymCounterpart);
+			this.DoWasCopied(copyPartModule, asSymCounterpart);
 		}
 
 		public sealed override void OnLoad(ConfigNode node)
@@ -94,6 +108,16 @@ namespace L_Aerospace.Lib
 			Log.dbg("{0}:OnStart.out {1} {2}", this.ID, state, this.Active);
 		}
 
+		public sealed override void OnStartFinished (StartState state)
+		{
+			Log.dbg("{0}:OnStartFinished .in {1} {2} {3} {4}", this.ID, state, this.enabled, this.hardActive, this.Active);
+			base.OnStart(state);
+
+			this.DoStartFinished(state);
+
+			Log.dbg("{0}:OnStartFinished .out {1} {2}", this.ID, state, this.Active);
+		}
+
 		private string _getInfo = null;
 		protected void ResetInfo() => this._getInfo = null;
 		public sealed override string GetInfo()
@@ -123,11 +147,14 @@ namespace L_Aerospace.Lib
 		#region My Internal Call Backs
 
 		protected abstract void DoAwake();
+		protected abstract void DoWillBeCopied (bool asSymCounterpart);
 		protected abstract void DoCopy(PartModule fromModule);
+		protected abstract void DoWasCopied(PartModule copyPartModule, bool asSymCounterpart);
 		protected abstract void DoLoad(KSPe.ConfigNodeWithSteroids node);
 		protected abstract void DoPrefabLoad(KSPe.ConfigNodeWithSteroids node);
 		protected abstract void DoSave(KSPe.ConfigNodeWithSteroids node);
 		protected abstract void DoStart(StartState state);
+		protected abstract void DoStartFinished(StartState state);
 		protected abstract string DoGetInfo();
 		protected abstract void DoUpdate();
 		protected abstract void DoFixedUpdate();

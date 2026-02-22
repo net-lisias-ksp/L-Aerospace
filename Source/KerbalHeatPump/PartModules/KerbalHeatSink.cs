@@ -37,6 +37,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			this.hardActive = Globals.Instance.KerbalHeatPump;
 		}
 
+		protected override void DoWillBeCopied (bool asSymCounterpart) { }
+		protected override void DoWasCopied(PartModule copyPartModule, bool asSymCounterpart)  { }
 		protected override void DoCopy(PartModule fromModule)
 		{
 			this.maxEnergyTransfer = (fromModule as KerbalHeatSink).maxEnergyTransfer;
@@ -51,6 +53,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			this.vesselModule = Controller.GetModule(this.vessel);
 			this.Active = this.maxEnergyTransfer > 0;
 		}
+
+		protected override void DoStartFinished(StartState state) { }
 
 		protected override string DoGetInfo()
 		{

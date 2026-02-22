@@ -50,6 +50,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			}
 		}
 
+		protected override void DoWillBeCopied (bool asSymCounterpart) { }
+		protected override void DoWasCopied(PartModule copyPartModule, bool asSymCounterpart)  { }
 		protected override void DoCopy(PartModule fromModule)
 		{
 			this.heatExchangeEnabled = (fromModule as KerbalHeatExchanger).heatExchangeEnabled;
@@ -81,6 +83,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			this.vesselModule = Controller.GetModule(this.vessel);
 			this.Active = 0 != this.resources.Length;
 		}
+
+		protected override void DoStartFinished(StartState state) { }
 
 		protected override string DoGetInfo()
 		{
