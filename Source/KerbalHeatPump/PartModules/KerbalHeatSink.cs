@@ -48,13 +48,12 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		protected override void DoPrefabLoad(KSPe.ConfigNodeWithSteroids node) { }
 		protected override void DoLoad(KSPe.ConfigNodeWithSteroids node) { }
 
-		protected override void DoStart(StartState state)
+		protected override void DoStart(StartState state) { }
+		protected override void DoStartFinished(StartState state)
 		{
-			this.vesselModule = Controller.GetVesselModule(this);
+			this.vesselModule = Controller.GetVesselModule(this);  // this don't work on DoStart??
 			this.Active = this.maxEnergyTransfer > 0;
 		}
-
-		protected override void DoStartFinished(StartState state) { }
 
 		protected override string DoGetInfo()
 		{

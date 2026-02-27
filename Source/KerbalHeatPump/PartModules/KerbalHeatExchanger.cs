@@ -80,11 +80,13 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		protected override void DoStart(StartState state)
 		{
 			this.OnThresholdRatioChanged(this.thresholdRatio);
-			this.vesselModule = Controller.GetVesselModule(this);
-			this.Active = 0 != this.resources.Length;
 		}
 
-		protected override void DoStartFinished(StartState state) { }
+		protected override void DoStartFinished(StartState state)
+		{
+			this.vesselModule = Controller.GetVesselModule(this);  // this don't work on DoStart??
+			this.Active = 0 != this.resources.Length;
+		}
 
 		protected override string DoGetInfo()
 		{

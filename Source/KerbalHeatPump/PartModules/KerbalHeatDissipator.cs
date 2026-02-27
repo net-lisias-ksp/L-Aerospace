@@ -70,21 +70,27 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		protected override void DoSave(KSPe.ConfigNodeWithSteroids node) { }
 		protected override void DoPrefabLoad(KSPe.ConfigNodeWithSteroids node) { }
-		protected override void DoLoad(KSPe.ConfigNodeWithSteroids node)
+		protected override void DoLoad(KSPe.ConfigNodeWithSteroids node) { }
+
+		protected override void DoStart(StartState state) { }
+
+		protected override void DoStartFinished(StartState state) 
 		{
+			this.vesselModule = Controller.GetVesselModule(this); // this don't work on DoStart??
 			this.resources = Lib.Part.buildResourceList(this, this.maxEnergyTransfer);
 			this.intakes = Lib.Part.buildIntakeList(this, this.resources);
-		}
 
-		protected override void DoStart(StartState state)
-		{
-			this.vesselModule = Controller.GetVesselModule(this);
-			this.Active = 0 != this.resources.Length;
-			this.Active &= 0 != this.intakes.Count;
+			this.Active = 0 != this.resources.Length
+						&& 0 != this.intakes.Count;
+
+			if (this.part.CrewCapacity > 0)
+			{
+				Log.error("Are you nuts? Shoving a dissipator on a crewable part? No Val barnecuing, please!!! :) (Disipator is permanenlty disabled)");
+				this.Active = false;
+			}
+
 			if (this.Ready) this.vesselModule.Announce(this);
 		}
-
-		protected override void DoStartFinished(StartState state) { }
 
 		protected override string DoGetInfo()
 		{
