@@ -83,12 +83,6 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			this.Active = 0 != this.resources.Length
 						&& 0 != this.intakes.Count;
 
-			if (this.part.CrewCapacity > 0)
-			{
-				Log.error("Are you nuts? Shoving a dissipator on a crewable part? No Val barnecuing, please!!! :) (Disipator is permanenlty disabled)");
-				this.Active = false;
-			}
-
 			if (this.Ready) this.vesselModule.Announce(this);
 		}
 

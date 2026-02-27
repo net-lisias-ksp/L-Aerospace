@@ -166,6 +166,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				ResourceDef r = this.resources[i];
 
 				double demand = r.ratio * (energyWeCanSink / this.maxEnergyTransfer);
+				if (demand < Lib.Physics.CUTOFF) continue;
 				double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
 				if (consumed < Lib.Physics.CUTOFF && demand > Lib.Physics.CUTOFF)
 				{
@@ -187,6 +188,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				this.heatExchangeEnabled = false;
 				//Lib.UI.PostScreenError(Localizer.Format("#SOMETHING");
 				Lib.UI.PostScreenWarning("No active Heat Sinks! Heat Exchanger is disabled!");
+				Log.dbg("{0}:OnFixedUpdate {1}: No active Heat Sinks! Heat Exchanger is disabled!", this.ID);
+				return;
 			}
 			this.part.thermalInternalFlux -= energySunk;
 			Log.dbg("{0}:OnFixedUpdate energyToBeSunk={1} ; enegySunk={2} ; part.thermalInternalFlux = {3} ; part.temperature = {4}", this.ID, energyToBeSunk, energySunk, this.part.thermalInternalFlux, this.part.temperature);

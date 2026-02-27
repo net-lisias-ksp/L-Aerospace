@@ -52,7 +52,11 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		protected override void DoStartFinished(StartState state)
 		{
 			this.vesselModule = Controller.GetVesselModule(this);  // this don't work on DoStart??
-			this.Active = this.maxEnergyTransfer > 0;
+			bool crewable = this.part.CrewCapacity > 0;
+			if (crewable)
+				Log.error("Are you nuts? Shoving a Heat Sinker on a crewable part? No Val barnecuing, please!!! :) (Sinker is permanently disabled)");
+
+			this.Active = !crewable && this.maxEnergyTransfer > 0;
 		}
 
 		protected override string DoGetInfo()
