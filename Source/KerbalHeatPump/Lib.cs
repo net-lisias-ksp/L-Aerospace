@@ -10,6 +10,11 @@ namespace L_Aerospace.Kerbal.HeatPump
 			internal const double CUTOFF = L_Aerospace.Lib.Physics.CUTOFF;
 		}
 
+		internal static class Math
+		{
+			internal static double GeometricProgression(double a, double r, int n) => a * System.Math.Pow(r, n);
+		}
+
 		internal static class UI
 		{
 			internal static void PostScreenWarning(string v) => L_Aerospace.Lib.UI.PostScreenWarning(v);

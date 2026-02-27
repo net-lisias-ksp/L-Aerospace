@@ -134,31 +134,28 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			double energyWeWantToDissipate = energyCurrent - energyGoal;
 			double energyWeCanDissipate = Math.Min(this.maxEnergyTransfer, energyWeWantToDissipate);
 
+			energyWeWantToDissipate *= TimeWarp.fixedDeltaTime;
 			Log.dbg("{0}:OnFixedUpdate energyWeCanDissipate={1} ; energyWeWantToDissipate={2}", this.ID, energyWeCanDissipate, energyWeWantToDissipate);
-			if (energyWeCanDissipate < 1) return;
+			if (energyWeCanDissipate < Lib.Physics.CUTOFF) return;
 
 			Log.dbg("{0}:OnFixedUpdate energyGoal = {1} ; energyCurrent = {2} ; energyWeCanDissipate = {3} ; energyWeWantToDissipate = {4}", this.ID, energyGoal, energyCurrent, energyWeCanDissipate, energyWeWantToDissipate);
 
-			energyWeWantToDissipate *= TimeWarp.fixedDeltaTime;
 			double maxEnergyTransfer = this.maxEnergyTransfer * TimeWarp.fixedDeltaTime;
 			for (int i = 0; i < this.resources.Length; ++i)
 			{
 				ResourceDef r = this.resources[i];
 
 				// Only the coolant in the part is accountable for thermal transfer! Heat Dissipators don't work remotely! :)
-				double energy, coollantThresholdRatio;
+				double energy = this.part.Resources.Get(r.id).amount * r.hspu;
+				double coollantThresholdRatio = this.coollantThresholdRatio;
 				if (this.intakes.ContainsKey(r))
 				{
-					energy = 0;
 					coollantThresholdRatio = 1.0;
 					ModuleResourceIntake[] l = this.intakes[r];
 					for (int j = 0 ; j < l.Length ; ++j) if (l[j].intakeEnabled)
-						energy += l[j].airFlow * l[j].intakeSpeed * r.hspu;
-				}
-				else
-				{
-					energy = this.part.Resources.Get(r.id).amount * r.hspu;
-					coollantThresholdRatio = this.coollantThresholdRatio;
+						// Heat Conductivity increases 9.8% each 5m/s for Air.
+						// TODO: Parametrize this for different mediums, like atmos from other planets and water!
+						energy *= Lib.Math.GeometricProgression(l[j].airFlow * l[j].intakeSpeed, 1.098, (int)(l[j].intakeSpeed / 5));
 				}
 
 				energy *= TimeWarp.fixedDeltaTime;
