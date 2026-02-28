@@ -77,6 +77,7 @@ namespace L_Aerospace.Lib
 			base.OnLoadVessel();
 
 			GameEvents.onEditorShipModified.Add(this.OnEditorShipModified);
+			GameEvents.onVesselWasModified.Add(this.OnVesselWasModified);
 			GameEvents.onVesselChange.Add(this.OnVesselChange);
 			this.DoLoadVessel();
 		}
@@ -110,6 +111,7 @@ namespace L_Aerospace.Lib
 			Log.dbg("{0}:OnUnloadVessel", this.name, this.vessel.GetInstanceID());
 			base.OnUnloadVessel();
 
+			GameEvents.onVesselWasModified.Remove(this.OnVesselWasModified);
 			GameEvents.onVesselChange.Remove(this.OnVesselChange);
 			GameEvents.onEditorShipModified.Remove(this.OnEditorShipModified);
 			this.DoUnloadVessel();
@@ -126,13 +128,15 @@ namespace L_Aerospace.Lib
 		protected virtual void DoGoOffRails() { }
 		protected virtual void DoUnloadVessel() { }
 
-		protected virtual void DoVesselChange(Vessel vessel) { }
 		protected virtual void DoEditorShipModified(ShipConstruct shipContruct) { }
+		protected virtual void DoVesselWasModified(Vessel data) { }
+		protected virtual void DoVesselChange(Vessel vessel) { }
 
 		#endregion
 
-		private void OnVesselChange(Vessel vessel) => this.DoVesselChange(vessel);
 		private void OnEditorShipModified(ShipConstruct shipContruct) => this.DoEditorShipModified(shipContruct);
+		private void OnVesselWasModified(Vessel vessel) => this.DoVesselWasModified(vessel);
+		private void OnVesselChange(Vessel vessel) => this.DoVesselChange(vessel);
 
 		private string __ID = null;
 		public string ID => __ID??(__ID = String.Format("{0}:{1:X}", this.name, this.vessel?.vesselName??"NOVESSEL", this.vessel.GetInstanceID()));

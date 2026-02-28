@@ -41,7 +41,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		}
 
 		protected override void DoGoOffRails() => this.populate();
-		protected override void DoVesselChange(Vessel data) => this.repopulate();
+		protected override void DoVesselWasModified(Vessel data) => this.repopulate();
 		protected override void DoEditorShipModified(ShipConstruct data) => this.repopulate();
 
 		#endregion

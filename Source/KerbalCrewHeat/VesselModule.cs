@@ -49,7 +49,7 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewHeat
 			this.Active = this.list.Count > 0;
 		}
 
-		protected override void DoVesselChange(Vessel vessel) => this.populate();
+		protected override void DoVesselWasModified(Vessel vessel) => this.populate();
 
 		#endregion
 
