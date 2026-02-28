@@ -49,11 +49,6 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		protected override void DoAwake()
 		{
 			this.hardActive = Globals.Instance.KerbalHeatPump;
-			{
-				BaseField field = Fields["maxEnergyTransfer"];
-				field.OnValueModified += this.OnMaxEnergyTransfer;
-				//UI_FloatRange range = (UI_FloatRange)field.uiControlEditor;
-			}
 		}
 
 		protected override void DoWillBeCopied (bool asSymCounterpart) { }
@@ -177,14 +172,6 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				if (energyWeWantToDissipate < Lib.Physics.CUTOFF) break;
 			}
 			Log.dbg("{0}:OnFixedUpdate enegyNotDissipated={1} ; this.part.thermalInternalFlux = {2} ; this.part.temperature = {3} ; intakeResourceTemp = {4}", this.ID, energyWeWantToDissipate, this.part.thermalInternalFlux, this.part.temperature, intakeResourceTemp);
-		}
-
-		private void OnMaxEnergyTransfer(object value)
-		{
-			float v = (float)this.maxEnergyTransfer * (float)value;
-			BaseField field = Fields["maxEnergyTransfer"];
-			field.guiName = string.Format("Heat EXCH THR: {0}", L_Aerospace.Lib.UI.Format(v, 0, "J"));
-			this.ResetInfo(); // Forces GetInfo to be regenerated.
 		}
 
 		#endregion

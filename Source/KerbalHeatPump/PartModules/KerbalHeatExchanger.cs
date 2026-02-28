@@ -28,12 +28,12 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		[UI_Toggle (disabledText = "#autoLOC_900890", scene = UI_Scene.All, enabledText = "#autoLOC_900889", affectSymCounterparts = UI_Scene.All)]
 		public bool heatExchangeEnabled = false;
 
+		[KSPField( isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cooland Usage Threshold", guiFormat = "P0")]
+		[UI_FloatRange(scene = UI_Scene.All, minValue = 0.00f, maxValue = 1f, stepIncrement = 0.01f)]
+		public float coollantThresholdRatio = 1f;
+
 		[KSPField (isPersistant = true)]
 		protected double maxEnergyTransfer = 7500;
-
-		[KSPField( isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Heat Exchange Threshold", guiFormat = "P0")]
-		[UI_FloatRange(scene = UI_Scene.All, minValue = 0.01f, maxValue = 1f, stepIncrement = 0.01f)]
-		public float thresholdRatio = 0.5f;
 
 		private Controller vesselModule;
 		private ResourceDef[] resources = new ResourceDef[0];
@@ -43,11 +43,6 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		protected override void DoAwake()
 		{
 			this.hardActive = Globals.Instance.KerbalHeatPump;
-			{
-				BaseField field = Fields["thresholdRatio"];
-				field.OnValueModified += this.OnThresholdRatioChanged;
-				//UI_FloatRange range = (UI_FloatRange)field.uiControlEditor;
-			}
 		}
 
 		protected override void DoWillBeCopied (bool asSymCounterpart) { }
@@ -56,7 +51,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			this.heatExchangeEnabled = (fromModule as KerbalHeatExchanger).heatExchangeEnabled;
 			this.maxEnergyTransfer = (fromModule as KerbalHeatExchanger).maxEnergyTransfer;
-			this.thresholdRatio = (fromModule as KerbalHeatExchanger).thresholdRatio;
+			this.coollantThresholdRatio = (fromModule as KerbalHeatExchanger).coollantThresholdRatio;
 			this.resources = (fromModule as KerbalHeatExchanger).resources;
 		}
 
@@ -77,10 +72,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 #endif
 		}
 
-		protected override void DoStart(StartState state)
-		{
-			this.OnThresholdRatioChanged(this.thresholdRatio);
-		}
+		protected override void DoStart(StartState state) { }
 
 		protected override void DoStartFinished(StartState state)
 		{
@@ -90,17 +82,9 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		protected override string DoGetInfo()
 		{
-			BaseField field = Fields["thresholdRatio"];
-			UI_FloatRange range = (UI_FloatRange)field.uiControlEditor;
-
 			string r = string.Format(
-						"Max Energy Transfer: {0}kW\n"
-						+ "Heat Exchage Theshold:\n"
-						+ " - from {1:F2}°K\n"
-						+ " - to {2:F2}°K"
+						"Max Energy Transfer : {0}kW"
 					, this.maxEnergyTransfer
-					, range.minValue * this.part.maxTemp
-					, range.maxValue * this.part.maxTemp
 				);
 			if (this.resources.Length > 0)
 			{
@@ -134,7 +118,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 			// pegar a temperatura da parte, multiplicar pela thermal mass.
 			double energyCurrent =  this.part.thermalMass * this.part.temperature;
-			double energyGoal = this.part.thermalMass * (this.part.maxTemp * ((double)this.thresholdRatio));
+			double energyGoal = this.part.thermalMass * this.vessel.atmosphericTemperature; // This is a Heat Pump, not a HVAC! Wec can't excange more heat than available on the environment!
 
 			double energyWeWantToSink = energyCurrent - energyGoal;
 			Log.dbg("{0}:OnFixedUpdate energyWeWantToSink={1}", this.ID, energyWeWantToSink);
@@ -165,7 +149,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			{
 				ResourceDef r = this.resources[i];
 
-				double demand = r.ratio * (energyWeCanSink / this.maxEnergyTransfer);
+				double demand = r.ratio * (energyWeCanSink / this.maxEnergyTransfer) * this.coollantThresholdRatio;
 				if (demand < Lib.Physics.CUTOFF) continue;
 				double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
 				if (consumed < Lib.Physics.CUTOFF && demand > Lib.Physics.CUTOFF)
@@ -193,14 +177,6 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			}
 			this.part.thermalInternalFlux -= energySunk;
 			Log.dbg("{0}:OnFixedUpdate energyToBeSunk={1} ; enegySunk={2} ; part.thermalInternalFlux = {3} ; part.temperature = {4}", this.ID, energyToBeSunk, energySunk, this.part.thermalInternalFlux, this.part.temperature);
-		}
-
-		private void OnThresholdRatioChanged(object value)
-		{
-			float v = (float)this.part.maxTemp * (float)value;
-			BaseField field = Fields["thresholdRatio"];
-			field.guiName = string.Format("Heat EXCH THR: {0}", Lib.UI.Format(v, 0, "°K"));
-			this.ResetInfo(); // Forces GetInfo to be regenerated.
 		}
 
 		#endregion
