@@ -37,11 +37,11 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewHeat
 		}
 
 		protected override void DoWillBeCopied (bool asSymCounterpart) { }
-		protected override void DoWasCopied(PartModule copyPartModule, bool asSymCounterpart)  { }
 		protected override void DoCopy(PartModule fromModule)
 		{
 			this.totalKerbalHeat = (fromModule as KerbalCrewHeat).totalKerbalHeat;
 		}
+		protected override void DoWasCopied(PartModule fromModule, bool asSymCounterpart) { }
 
 		protected override void DoSave(KSPe.ConfigNodeWithSteroids node) { }
 		protected override void DoPrefabLoad(KSPe.ConfigNodeWithSteroids node) { }

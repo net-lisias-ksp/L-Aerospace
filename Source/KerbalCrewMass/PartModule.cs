@@ -37,8 +37,8 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 		}
 
 		protected override void DoWillBeCopied (bool asSymCounterpart) { }
-		protected override void DoWasCopied(PartModule copyPartModule, bool asSymCounterpart)  { }
-		protected override void DoCopy(PartModule fromModule) 
+		protected override void DoCopy(PartModule fromModule) { }
+		protected override void DoWasCopied(PartModule fromModule, bool asSymCounterpart) 
 		{
 			this.massSurplus = (fromModule as KerbalCrewMass).massSurplus;
 		}

@@ -46,7 +46,6 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		}
 
 		protected override void DoWillBeCopied (bool asSymCounterpart) { }
-		protected override void DoWasCopied(PartModule copyPartModule, bool asSymCounterpart)  { }
 		protected override void DoCopy(PartModule fromModule)
 		{
 			this.heatExchangeEnabled = (fromModule as KerbalHeatExchanger).heatExchangeEnabled;
@@ -54,6 +53,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			this.coollantThresholdRatio = (fromModule as KerbalHeatExchanger).coollantThresholdRatio;
 			this.resources = (fromModule as KerbalHeatExchanger).resources;
 		}
+		protected override void DoWasCopied(PartModule fromModule, bool asSymCounterpart) { }
 
 		protected override void DoSave(KSPe.ConfigNodeWithSteroids node) { }
 		protected override void DoPrefabLoad(KSPe.ConfigNodeWithSteroids node) { }

@@ -149,7 +149,7 @@ namespace L_Aerospace.Lib
 		protected abstract void DoAwake();
 		protected abstract void DoWillBeCopied (bool asSymCounterpart);
 		protected abstract void DoCopy(PartModule fromModule);
-		protected abstract void DoWasCopied(PartModule copyPartModule, bool asSymCounterpart);
+		protected abstract void DoWasCopied(PartModule fromModule, bool asSymCounterpart);
 		protected abstract void DoLoad(KSPe.ConfigNodeWithSteroids node);
 		protected abstract void DoPrefabLoad(KSPe.ConfigNodeWithSteroids node);
 		protected abstract void DoSave(KSPe.ConfigNodeWithSteroids node);

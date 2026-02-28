@@ -52,13 +52,14 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		}
 
 		protected override void DoWillBeCopied (bool asSymCounterpart) { }
-		protected override void DoWasCopied(PartModule copyPartModule, bool asSymCounterpart)  { }
 		protected override void DoCopy(PartModule fromModule)
 		{
 			this.heatExchangeEnabled = (fromModule as KerbalHeatDissipator).heatExchangeEnabled;
 			this.maxEnergyTransfer = (fromModule as KerbalHeatDissipator).maxEnergyTransfer;
 			this.resources = (fromModule as KerbalHeatDissipator).resources;
-
+		}
+		protected override void DoWasCopied(PartModule fromModule, bool asSymCounterpart)
+		{
 			// These guys are tied to their original Part, I can't just copy them to this one!
 			this.intakes = Lib.Part.buildIntakeList(this, this.resources);
 		}
