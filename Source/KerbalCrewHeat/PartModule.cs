@@ -36,6 +36,7 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewHeat
 			this.hardActive = Globals.Instance.KerbalCrewHeat;
 		}
 
+		protected override void DoEditorPartEvent(ConstructionEventType eventType, Part part) { }
 		protected override void DoWillBeCopied (bool asSymCounterpart) { }
 		protected override void DoCopy(PartModule fromModule)
 		{

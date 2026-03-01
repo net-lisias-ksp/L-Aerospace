@@ -36,6 +36,7 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 			this.hardActive = Globals.Instance.KerbalCrewMass;
 		}
 
+		protected override void DoEditorPartEvent(ConstructionEventType eventType, Part part) { }
 		protected override void DoWillBeCopied (bool asSymCounterpart) { }
 		protected override void DoCopy(PartModule fromModule) { }
 		protected override void DoWasCopied(PartModule fromModule, bool asSymCounterpart) 

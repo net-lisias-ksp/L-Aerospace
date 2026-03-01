@@ -142,11 +142,29 @@ namespace L_Aerospace.Lib
 			this.DoFixedUpdate();
 		}
 
+		private void OnEditorPartEvent(ConstructionEventType eventType, Part part) => DoEditorPartEvent(eventType, part);
+
+		#endregion
+
+		#region Unity Life Cycle
+
+		private new void Awake()
+		{
+			base.Awake();
+			GameEvents.onEditorPartEvent.Add(this.OnEditorPartEvent); // OnDestroy!
+		}
+
+		private void OnDestroy()
+		{
+			GameEvents.onEditorPartEvent.Remove(this.OnEditorPartEvent); // OnDestroy!
+		}
+
 		#endregion
 
 		#region My Internal Call Backs
 
 		protected abstract void DoAwake();
+		protected abstract void DoEditorPartEvent(ConstructionEventType eventType, Part part);
 		protected abstract void DoWillBeCopied (bool asSymCounterpart);
 		protected abstract void DoCopy(PartModule fromModule);
 		protected abstract void DoWasCopied(PartModule fromModule, bool asSymCounterpart);

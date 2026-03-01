@@ -45,6 +45,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			this.hardActive = Globals.Instance.KerbalHeatPump;
 		}
 
+		protected override void DoEditorPartEvent(ConstructionEventType eventType, Part part) { }
 		protected override void DoWillBeCopied (bool asSymCounterpart) { }
 		protected override void DoCopy(PartModule fromModule)
 		{
