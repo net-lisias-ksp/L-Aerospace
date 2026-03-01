@@ -57,6 +57,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			this.heatExchangeEnabled = (fromModule as KerbalHeatDissipator).heatExchangeEnabled;
 			this.maxEnergyTransfer = (fromModule as KerbalHeatDissipator).maxEnergyTransfer;
+			this.coollantThresholdRatio = (fromModule as KerbalHeatExchanger).coollantThresholdRatio;
 			this.resources = (fromModule as KerbalHeatDissipator).resources;
 		}
 		protected override void DoWasCopied(PartModule fromModule, bool asSymCounterpart)
@@ -80,7 +81,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			this.Active = 0 != this.resources.Length
 						&& 0 != this.intakes.Count;
 
-			if (this.Ready) this.vesselModule.Announce(this);
+			this.vesselModule?.Announce(this); // VesselModule is not available on Editor!
 		}
 
 		protected override string DoGetInfo()

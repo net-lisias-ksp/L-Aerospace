@@ -58,6 +58,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				Log.error("Are you nuts? Shoving a Heat Sinker on a crewable part? No Val barnecuing, please!!! :) (Sinker is permanently disabled)");
 
 			this.Active = !crewable && this.maxEnergyTransfer > 0;
+			this.vesselModule?.Announce(this); // VesselModule is not available on Editor!
 		}
 
 		protected override string DoGetInfo()

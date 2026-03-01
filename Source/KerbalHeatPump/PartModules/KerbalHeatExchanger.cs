@@ -79,6 +79,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			this.vesselModule = Controller.GetVesselModule(this);  // this don't work on DoStart??
 			this.Active = 0 != this.resources.Length;
+			this.vesselModule?.Announce(this); // VesselModule is not available on Editor!
 		}
 
 		protected override string DoGetInfo()
