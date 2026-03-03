@@ -79,6 +79,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			if (!this.Active) return 0;
 
+			// Note: Everything on KSP is computed in kW
+
 			double maxEnergyToSink = this.maxEnergyTransfer * TimeWarp.fixedDeltaTime;
 			energy = Math.Min(energy, maxEnergyToSink);
 

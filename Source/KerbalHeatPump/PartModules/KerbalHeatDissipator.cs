@@ -120,6 +120,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			if (!this.heatExchangeEnabled) return;
 
+			// Note: Everything on KSP is computed in kW
+
 			// Pegar temperatura do ambiente. Essa eh temperatura do resource being scoped.
 			// multiplicar pela thermalmass para saber qual o bottom line que a parte pode chegar
 			double intakeResourceTemp = this.vessel.atmosphericTemperature;
@@ -147,7 +149,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 				if (r.hspu < Lib.Physics.CUTOFF)
 				{
-					double demand = r.ratio * Math.Min(this.maxEnergyTransfer, energyEffectivelySunk);
+					double demand = r.ratio * Math.Min(maxEnergyTransfer, energyEffectivelySunk);
 					if (demand > Lib.Physics.CUTOFF)
 					{ 
 						double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);

@@ -133,13 +133,15 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			if (!this.heatExchangeEnabled) return;
 
+			// Note: Everything on KSP is computed in kW
+
 			// pegar a temperatura da parte, multiplicar pela thermal mass.
 			double energyCurrent =  this.part.thermalMass * this.part.temperature;
 			double energyGoal = this.part.thermalMass * this.vessel.atmosphericTemperature; // This is a Heat Pump, not a HVAC! Wec can't excange more heat than available on the environment!
 
 			double energyWeWantToSink = energyCurrent - energyGoal;
 			Log.dbg("{0}:OnFixedUpdate energyWeWantToSink={1}", this.ID, energyWeWantToSink);
-			if (energyWeWantToSink < 1) return;
+			if (energyWeWantToSink < Lib.Physics.CUTOFF) return;
 
 			double maxEnergyTransfer = this.maxEnergyTransfer * this.heatExchangeThresholdRatio;
 			double energyWeCanSink = Math.Min(energyWeWantToSink, maxEnergyTransfer);
@@ -148,7 +150,6 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			double energyAvailable = 0;
 			for (int i = 0; i < this.resources.Length; ++i)
 				energyAvailable += this.resources[i].hspu * this.part.Resources.Get(resources[i].id).amount;
-			energyAvailable *= TimeWarp.fixedDeltaTime;
 			if (energyAvailable < Lib.Physics.CUTOFF)
 			{
 				Log.dbg("{0}:OnFixedUpdate NOT ENOUGH OUT OF COOLANTS!", this.ID);
@@ -199,7 +200,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			float v = (float)this.maxEnergyTransfer * (float)value;
 			BaseField field = Fields["heatExchangeThresholdRatio"];
-			field.guiName = string.Format("Heat EXCH THR: {0}", Lib.UI.Format(v, 0, "W"));
+			field.guiName = string.Format("Heat EXCH THR: {0}", Lib.UI.Format(1000*v, 0, "W"));
 		}
 
 		#endregion

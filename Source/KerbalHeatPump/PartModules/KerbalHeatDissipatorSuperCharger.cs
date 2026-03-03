@@ -115,6 +115,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			this.availableEnergy = 0;
 			if (!this.Ready) return;
 
+			// Note: Everything on KSP is computed in kW
+
 			Log.dbg("{0}:DoFixedUpate {1} {2}", this.ID, null != this.part, null != this.part.Resources);
 
 			for (int i = 0; i < this.resources.Length; ++i)
