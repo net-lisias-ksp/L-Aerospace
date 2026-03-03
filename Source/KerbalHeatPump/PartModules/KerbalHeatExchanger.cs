@@ -28,9 +28,12 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		[UI_Toggle (disabledText = "#autoLOC_900890", scene = UI_Scene.All, enabledText = "#autoLOC_900889", affectSymCounterparts = UI_Scene.All)]
 		public bool heatExchangeEnabled = false;
 
-		[KSPField( isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Cooland Usage Threshold", guiFormat = "P0")]
-		[UI_FloatRange(scene = UI_Scene.All, minValue = 0.00f, maxValue = 1f, stepIncrement = 0.01f)]
-		public float coollantThresholdRatio = 1f;
+		[KSPField (isPersistant = false, guiActive = false, guiActiveEditor = false, guiName = "Cabin Temperature")]
+		public string cabinTempStatus = "";
+
+		[KSPField( isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Heat EXCH THR", guiFormat = "P1")]
+		[UI_FloatRange(scene = UI_Scene.All, minValue = 0.001f, maxValue = 1f, stepIncrement = 0.001f)]
+		public float heatExchangeThresholdRatio = 1f;
 
 		[KSPField (isPersistant = true)]
 		protected double maxEnergyTransfer = 7500;
@@ -43,6 +46,15 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		protected override void DoAwake()
 		{
 			this.hardActive = Globals.Instance.KerbalHeatPump;
+			{
+				BaseField field = Fields["heatExchangeThresholdRatio"];
+				field.OnValueModified += this.OnHeatExchangeThresholdRatio;
+				//UI_FloatRange range = (UI_FloatRange)field.uiControlEditor;
+			}
+			{
+				BaseField field = Fields["cabinTempStatus"];
+				field.guiActive = field.guiActiveEditor = HighLogic.LoadedSceneIsFlight;
+			}
 		}
 
 		protected override void DoEditorPartEvent(ConstructionEventType eventType, Part part) { }
@@ -51,7 +63,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			this.heatExchangeEnabled = (fromModule as KerbalHeatExchanger).heatExchangeEnabled;
 			this.maxEnergyTransfer = (fromModule as KerbalHeatExchanger).maxEnergyTransfer;
-			this.coollantThresholdRatio = (fromModule as KerbalHeatExchanger).coollantThresholdRatio;
+			this.heatExchangeThresholdRatio = (fromModule as KerbalHeatExchanger).heatExchangeThresholdRatio;
 			this.resources = (fromModule as KerbalHeatExchanger).resources;
 		}
 		protected override void DoWasCopied(PartModule fromModule, bool asSymCounterpart) { }
@@ -112,7 +124,10 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			return r;
 		}
 
-		protected override void DoUpdate() { }
+		protected override void DoUpdate()
+		{
+			this.cabinTempStatus = Lib.UI.Format(this.part.temperature, 0, "°K");
+		}
 
 		protected override void DoFixedUpdate()
 		{
@@ -126,7 +141,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			Log.dbg("{0}:OnFixedUpdate energyWeWantToSink={1}", this.ID, energyWeWantToSink);
 			if (energyWeWantToSink < 1) return;
 
-			double energyWeCanSink = Math.Min(energyWeWantToSink, this.maxEnergyTransfer);
+			double maxEnergyTransfer = this.maxEnergyTransfer * this.heatExchangeThresholdRatio;
+			double energyWeCanSink = Math.Min(energyWeWantToSink, maxEnergyTransfer);
 
 			// Only the coolant in the part is accountable for thermal transfer!
 			double energyAvailable = 0;
@@ -150,7 +166,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			{
 				ResourceDef r = this.resources[i];
 
-				double demand = r.ratio * (energyWeCanSink / this.maxEnergyTransfer) * this.coollantThresholdRatio;
+				double demand = r.ratio * (energyWeCanSink / this.maxEnergyTransfer) * this.heatExchangeThresholdRatio;
 				if (demand < Lib.Physics.CUTOFF) continue;
 				double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
 				if (consumed < Lib.Physics.CUTOFF && demand > Lib.Physics.CUTOFF)
@@ -177,6 +193,13 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			}
 			this.part.thermalInternalFlux -= energySunk;
 			Log.dbg("{0}:OnFixedUpdate energyToBeSunk={1} ; enegySunk={2} ; part.thermalInternalFlux = {3} ; part.temperature = {4}", this.ID, energy, energySunk, this.part.thermalInternalFlux, this.part.temperature);
+		}
+
+		private void OnHeatExchangeThresholdRatio(object value)
+		{
+			float v = (float)this.maxEnergyTransfer * (float)value;
+			BaseField field = Fields["heatExchangeThresholdRatio"];
+			field.guiName = string.Format("Heat EXCH THR: {0}", Lib.UI.Format(v, 0, "W"));
 		}
 
 		#endregion
