@@ -57,7 +57,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			this.heatExchangeEnabled = (fromModule as KerbalHeatDissipator).heatExchangeEnabled;
 			this.maxEnergyTransfer = (fromModule as KerbalHeatDissipator).maxEnergyTransfer;
-			this.coollantThresholdRatio = (fromModule as KerbalHeatExchanger).coollantThresholdRatio;
+			this.coollantThresholdRatio = (fromModule as KerbalHeatDissipator).coollantThresholdRatio;
 			this.resources = (fromModule as KerbalHeatDissipator).resources;
 		}
 		protected override void DoWasCopied(PartModule fromModule, bool asSymCounterpart)

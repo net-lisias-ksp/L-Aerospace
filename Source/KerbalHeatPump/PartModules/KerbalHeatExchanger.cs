@@ -146,7 +146,6 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			Log.dbg("{0}:OnFixedUpdate energyWeWantToSink={1} ; energyWeCanSink={2} ; energyAvailable={3} ; maxEnergyTransfer {4}", this.ID, energyWeWantToSink, energyWeCanSink, energyAvailable, this.maxEnergyTransfer);
 
 			double energy = Math.Min(energyWeCanSink, energyAvailable) * TimeWarp.fixedDeltaTime;
-			double energyToBeSunk = 0;
 			for (int i = 0; i < this.resources.Length; ++i)
 			{
 				ResourceDef r = this.resources[i];
@@ -164,11 +163,10 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 					return;
 				}
 				energy *= (consumed/demand);
-				energyToBeSunk += energy * r.hspu;
 				Log.dbg("{0}:OnFixedUpdate {1}: demand={2} ; consumed={3} ; energy = {4}", this.ID, r.name, demand, consumed, energy);
 			}
 
-			double energySunk = this.vesselModule.PumpHeat(energyToBeSunk);
+			double energySunk = this.vesselModule.PumpHeat(energy);
 			if (double.IsNaN(energySunk))
 			{
 				this.heatExchangeEnabled = false;
@@ -178,7 +176,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				return;
 			}
 			this.part.thermalInternalFlux -= energySunk;
-			Log.dbg("{0}:OnFixedUpdate energyToBeSunk={1} ; enegySunk={2} ; part.thermalInternalFlux = {3} ; part.temperature = {4}", this.ID, energyToBeSunk, energySunk, this.part.thermalInternalFlux, this.part.temperature);
+			Log.dbg("{0}:OnFixedUpdate energyToBeSunk={1} ; enegySunk={2} ; part.thermalInternalFlux = {3} ; part.temperature = {4}", this.ID, energy, energySunk, this.part.thermalInternalFlux, this.part.temperature);
 		}
 
 		#endregion
