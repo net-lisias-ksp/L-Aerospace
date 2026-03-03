@@ -73,7 +73,7 @@ namespace L_Aerospace.Lib
 
 		public sealed override void OnLoadVessel()
 		{
-			Log.dbg("{0}:OnLoadVessel", this.name, this.vessel.GetInstanceID());
+			Log.dbg("{0}:OnLoadVessel {1}", this.ID, this.hardActive);
 			base.OnLoadVessel();
 
 			GameEvents.onEditorShipModified.Add(this.OnEditorShipModified);
@@ -84,7 +84,7 @@ namespace L_Aerospace.Lib
 
 		protected sealed override void OnStart()
 		{
-			Log.dbg("{0}:OnStart", this.ID);
+			Log.dbg("{0}:OnStart {1}", this.ID, this.hardActive);
 			base.OnStart();
 
 			this.DoStart();

@@ -139,9 +139,22 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			Log.dbg("{0}:OnFixedUpdate energyGoal = {1} ; energyCurrent = {2} ; energyWeCanDissipate = {3} ; energyWeWantToDissipate = {4}", this.ID, energyGoal, energyCurrent, energyWeCanDissipate, energyWeWantToDissipate);
 
 			double maxEnergyTransfer = this.maxEnergyTransfer * TimeWarp.fixedDeltaTime;
+
+			double energyEffectivelySunk = 0;
 			for (int i = 0; i < this.resources.Length; ++i)
 			{
 				ResourceDef r = this.resources[i];
+
+				if (r.hspu < Lib.Physics.CUTOFF)
+				{
+					double demand = r.ratio * Math.Min(this.maxEnergyTransfer, energyEffectivelySunk);
+					if (demand > Lib.Physics.CUTOFF)
+					{ 
+						double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
+						energyEffectivelySunk *= consumed/demand;
+					}
+					continue;
+				}
 
 				// Only the coolant in the part is accountable for thermal transfer! Heat Dissipators don't work remotely! :)
 				double energy = this.part.Resources.Get(r.id).amount * r.hspu;
@@ -159,20 +172,31 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				energy *= TimeWarp.fixedDeltaTime;
 				energy = Math.Min(energyWeWantToDissipate, energy);
 
+				energy += this.vesselModule.WithdrawEnergy(energy, this);
+
 				Log.dbg("{0}:OnFixedUpdate {1} energyWeWantToDissipate={2} ; energy={3} ; maxEnergyTransfer={4}", this.ID, r.name, energyWeWantToDissipate, energy, maxEnergyTransfer);
 
-				double demand = r.ratio * Math.Min(coollantThresholdRatio, energyWeWantToDissipate / maxEnergyTransfer);
-				energy *= TimeWarp.fixedDeltaTime;
-				if (demand > Lib.Physics.CUTOFF)
 				{
-					double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
-					energy *= (consumed/demand);
-					Log.dbg("{0}:OnFixedUpdate {1} demand={2} ; consumed={3} ; energy = {4} ; energyToDissipate = {5}", this.ID, r.name, demand, consumed, energy, energyWeWantToDissipate);
+					double demand = r.ratio * Math.Min(coollantThresholdRatio, energyWeWantToDissipate / maxEnergyTransfer);
+					energy *= TimeWarp.fixedDeltaTime;
+					if (demand > Lib.Physics.CUTOFF)
+					{
+						double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
+						energy *= (consumed/demand);
+						Log.dbg("{0}:OnFixedUpdate {1} demand={2} ; consumed={3} ; energy = {4} ; energyToDissipate = {5}", this.ID, r.name, demand, consumed, energy, energyWeWantToDissipate);
+					}
 				}
-				this.part.thermalInternalFlux -= energy;
+				energyEffectivelySunk += energy;
 				energyWeWantToDissipate = Math.Max(0, energyWeWantToDissipate - energy);
 				Log.dbg("{0}:OnFixedUpdate part.temperature={1} ; part.thermalInternalFlux={2} ; energy={3} ; (left)energyToDissipate={4}", this.ID, this.part.temperature, this.part.thermalInternalFlux, energy, energyWeWantToDissipate);
 				if (energyWeWantToDissipate < Lib.Physics.CUTOFF) break;
+			}
+			this.part.thermalInternalFlux -= energyEffectivelySunk;
+			{
+				double energy = this.vesselModule.WithdrawEnergy(energyWeWantToDissipate, this);
+				this.part.thermalInternalFlux -= energy;
+				energyWeWantToDissipate -= energy;
+				Log.dbg("{0}:OnFixedUpdate withdrawnEnergy={1}", this.ID, energy);
 			}
 			Log.dbg("{0}:OnFixedUpdate enegyNotDissipated={1} ; this.part.thermalInternalFlux = {2} ; this.part.temperature = {3} ; intakeResourceTemp = {4}", this.ID, energyWeWantToDissipate, this.part.thermalInternalFlux, this.part.temperature, intakeResourceTemp);
 		}

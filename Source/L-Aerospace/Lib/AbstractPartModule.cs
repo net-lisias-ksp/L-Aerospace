@@ -42,9 +42,10 @@ namespace L_Aerospace.Lib
 
 		public sealed override void OnAwake()
 		{
-			Log.dbg("{0}:OnAwake", this.ID);
+			Log.dbg("{0}:OnAwake.in {1}", this.ID, this.hardActive);
 			base.OnAwake();
 			this.DoAwake();
+			Log.dbg("{0}:OnAwake.out {1}", this.ID, this.hardActive);
 		}
 
 		public sealed override void OnWillBeCopied (bool asSymCounterpart)

@@ -27,18 +27,26 @@ namespace L_Aerospace.Kerbal.HeatPump
 		{
 			internal static ResourceDef[] buildResourceList(L_Aerospace.Lib.AbstractPartModule owner, double maxEnergyTransfer)
 			{
-				ResourceDef[] r = ResourceDef.readList(maxEnergyTransfer, owner.part.partInfo.partConfig, owner.GetType().Name).ToArray();
-				if (0 == r.Length)
+				List<ResourceDef> list = ResourceDef.readList(maxEnergyTransfer, owner.part.partInfo.partConfig, owner.GetType().Name);
+				List<ResourceDef> r = new List<ResourceDef>(list.Count);
+
+				if (0 == list.Count)
 					Log.warn("{0}:buildResourceList No Resources found! Deactivating myself...", owner.ID);
 				else
-					Log.dbg("{0}:buildResourceList Found {1} Resources", owner.ID, r.Length);
-	#if DEBUG
+					Log.dbg("{0}:buildResourceList Found {1} Resources", owner.ID, list.Count);
 				{
-					for (int i = 0; i < r.Length; ++i)
-						Log.dbg("{0}:buildResourceList {1}", owner.ID, r[i]);
+					for (int i = 0; i < list.Count; ++i)
+					{
+						Log.dbg("{0}:buildResourceList {1}", owner.ID, list[i]);
+						if (null == owner.part.Resources.Get(list[i].id))
+						{ 
+							Log.warn("Resource {0} is not present on part {1} hosting {2}. It will be ignored!", list[i].name, owner.ID, owner.GetType().Name);
+							continue;
+						}
+						r.Add(list[i]);
+					}
 				}
-	#endif
-				return r;
+				return r.ToArray();
 			}
 
 			internal static Dictionary<ResourceDef, ModuleResourceIntake[]> buildIntakeList(L_Aerospace.Lib.AbstractPartModule owner, ResourceDef[] resources)
@@ -68,6 +76,36 @@ namespace L_Aerospace.Kerbal.HeatPump
 
 				return r;
 			}
+
+			internal static KerbalHeatDissipatorSuperCharger[] buildSuperChargerList(L_Aerospace.Lib.AbstractPartModule owner)
+			{
+				List<global::Part> kids = owner.part.children;
+				List<KerbalHeatDissipatorSuperCharger> r = new List<KerbalHeatDissipatorSuperCharger>();
+				for (int i = 0; i < kids.Count; ++i)
+				{
+					Log.dbg("{0}:buildSuperChargerList {1}", owner.ID, kids[i].name);
+					r.AddRange(kids[i].FindModulesImplementing<KerbalHeatDissipatorSuperCharger>());
+				}
+				if (0 == r.Count)
+					Log.detail("{0}:buildSuperChargerList No Super Chargers found...", owner.ID);
+				return r.ToArray();
+			}
+
+			internal static global::Part LookForTarget(KerbalHeatDissipatorSuperCharger heatDissipatorSuperCharger)
+			{
+				global::Part part = heatDissipatorSuperCharger.part;
+				{
+					KerbalHeatDissipator m = part.parent.FindModuleImplementing<KerbalHeatDissipator>();
+					if (m) return m.part;
+				}
+				for (int i = 0; i < part.children.Count; ++i)
+				{
+					KerbalHeatDissipator m = part.children[i].FindModuleImplementing<KerbalHeatDissipator>();
+					if (m) return m.part;
+				}
+				return null;
+			}
+
 		}
 	}
 }

@@ -49,6 +49,7 @@
     <Compile Include="PartModules\KerbalHeatSink.cs" />
     <Compile Include="ResourceDef.cs" />
     <Compile Include="PartModules\KerbalHeatDissipator.cs" />
+    <Compile Include="PartModules\KerbalHeatDissipatorSuperCharger.cs" />
     <Compile Include="Lib.cs" />
   </ItemGroup>
   <ItemGroup>
