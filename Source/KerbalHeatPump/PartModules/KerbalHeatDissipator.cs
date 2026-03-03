@@ -122,6 +122,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 			// Note: Everything on KSP is computed in kW
 
+			Log.dbg("{0}:OnFixedUpdate vessel.atmosphericTemperature = {1} ; part.thermalMass = {2} ; part.temperature = {3}", this.ID, this.vessel.atmosphericTemperature, this.part.thermalMass, this.part.temperature);
+
 			// Pegar temperatura do ambiente. Essa eh temperatura do resource being scoped.
 			// multiplicar pela thermalmass para saber qual o bottom line que a parte pode chegar
 			double intakeResourceTemp = this.vessel.atmosphericTemperature;

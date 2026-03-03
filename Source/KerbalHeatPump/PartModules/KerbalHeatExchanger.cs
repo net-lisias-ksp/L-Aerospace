@@ -135,6 +135,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 			// Note: Everything on KSP is computed in kW
 
+			Log.dbg("{0}:OnFixedUpdate vessel.atmosphericTemperature = {1} ; part.thermalMass = {2} ; part.temperature = {3}", this.ID, this.vessel.atmosphericTemperature, this.part.thermalMass, this.part.temperature);
+
 			// pegar a temperatura da parte, multiplicar pela thermal mass.
 			double energyCurrent =  this.part.thermalMass * this.part.temperature;
 			double energyGoal = this.part.thermalMass * this.vessel.atmosphericTemperature; // This is a Heat Pump, not a HVAC! Wec can't excange more heat than available on the environment!
@@ -160,14 +162,22 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				return;
 			}
 
-			Log.dbg("{0}:OnFixedUpdate energyWeWantToSink={1} ; energyWeCanSink={2} ; energyAvailable={3} ; maxEnergyTransfer {4}", this.ID, energyWeWantToSink, energyWeCanSink, energyAvailable, this.maxEnergyTransfer);
+			// Now we need to cope with the event in which want to pump out more energy than we have in the budget (due lack of coolant)
+			// We "salvage" the situation by stressing the cooland pumps to make them flow faster into the dissipator.
+			// We calculate that onus by merely dividing thethe energy we want to ditch by the energy budget. The onus is a multipier
+			// to be applied on the resources with HSP = 0.
+			// Note: both values are guaranteed not to be zero at this point.
+			double resourceOnus = energyWeCanSink / energyAvailable;
+
+			Log.dbg("{0}:OnFixedUpdate energyWeWantToSink={1} ; energyWeCanSink={2} ; energyAvailable={3} ; maxEnergyTransfer {4}", this.ID, energyWeWantToSink, energyWeCanSink, energyAvailable, maxEnergyTransfer);
 
 			double energy = Math.Min(energyWeCanSink, energyAvailable) * TimeWarp.fixedDeltaTime;
 			for (int i = 0; i < this.resources.Length; ++i)
 			{
 				ResourceDef r = this.resources[i];
 
-				double demand = r.ratio * (energyWeCanSink / this.maxEnergyTransfer) * this.heatExchangeThresholdRatio;
+				double thisResourceOnus = (0 == r.hspu ? Math.Max(1, resourceOnus) : 1);
+				double demand = r.ratio * (energyWeCanSink / maxEnergyTransfer) * thisResourceOnus;
 				if (demand < Lib.Physics.CUTOFF) continue;
 				double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
 				if (consumed < Lib.Physics.CUTOFF && demand > Lib.Physics.CUTOFF)
@@ -179,8 +189,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 					Lib.UI.PostScreenWarning(string.Format("Vessel {0} run out of {1}. Heat Exchanger is disabled!", this.vessel.vesselName, r.name));
 					return;
 				}
-				energy *= (consumed/demand);
-				Log.dbg("{0}:OnFixedUpdate {1}: demand={2} ; consumed={3} ; energy = {4}", this.ID, r.name, demand, consumed, energy);
+				energy *= (consumed/demand) * thisResourceOnus;
+				Log.dbg("{0}:OnFixedUpdate {1}: demand={2} ; consumed={3} ; thisResourceOnus = {4} ; energy = {5}", this.ID, r.name, demand, consumed, thisResourceOnus, energy);
 			}
 
 			double energySunk = this.vesselModule.PumpHeat(energy);
