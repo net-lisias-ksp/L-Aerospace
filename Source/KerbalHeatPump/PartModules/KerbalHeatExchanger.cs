@@ -175,22 +175,27 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			for (int i = 0; i < this.resources.Length; ++i)
 			{
 				ResourceDef r = this.resources[i];
+				double thisResourceOnus = 1;
 
-				double thisResourceOnus = (0 == r.hspu ? Math.Max(1, resourceOnus) : 1);
-				double demand = r.ratio * (energyWeCanSink / maxEnergyTransfer) * thisResourceOnus;
-				if (demand < Lib.Physics.CUTOFF) continue;
-				double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
-				if (consumed < Lib.Physics.CUTOFF && demand > Lib.Physics.CUTOFF)
+				if (r.hspu < Lib.Physics.CUTOFF)
 				{
-					Log.dbg("{0}:OnFixedUpdate {1} NOT ENOUGH!: demand={2} ; consumed={3}", this.ID, r.name, demand, consumed);
-					// Any already consumed resouces are lost.
-					this.heatExchangeEnabled = false;
-					//Lib.UI.PostScreenWarning(Localizer.Format("#SOMETHING", this.vessel.vesselName, this.resources[i].name));
-					Lib.UI.PostScreenWarning(string.Format("Vessel {0} run out of {1}. Heat Exchanger is disabled!", this.vessel.vesselName, r.name));
-					return;
+					thisResourceOnus = Math.Max(1, resourceOnus);
+					double demand = r.ratio * Math.Min(maxEnergyTransfer, energy) * thisResourceOnus;
+					if (demand > Lib.Physics.CUTOFF)
+					{ 
+						double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
+						energy *= consumed/demand;
+					}
+					continue;
 				}
-				energy *= (consumed/demand) * thisResourceOnus;
-				Log.dbg("{0}:OnFixedUpdate {1}: demand={2} ; consumed={3} ; thisResourceOnus = {4} ; energy = {5}", this.ID, r.name, demand, consumed, thisResourceOnus, energy);
+
+				{
+					double demand = r.ratio * (energyWeCanSink / maxEnergyTransfer) * thisResourceOnus;
+					if (demand < Lib.Physics.CUTOFF) continue;
+					double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
+					energy *= (consumed/demand) * thisResourceOnus;
+					Log.dbg("{0}:OnFixedUpdate {1}: demand={2} ; consumed={3} ; thisResourceOnus = {4} ; energy = {5}", this.ID, r.name, demand, consumed, thisResourceOnus, energy);
+				}
 			}
 
 			double energySunk = this.vesselModule.PumpHeat(energy);
