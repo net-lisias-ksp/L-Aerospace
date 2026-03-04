@@ -130,6 +130,13 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 					{
 						double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
 						this.availableEnergy *= consumed/demand;
+						if (consumed < Lib.Physics.CUTOFF)
+						{
+							Log.dbg("{0}:OnFixedUpdate {1} NOT ENOUGH!: demand={2} ; consumed={3}", this.ID, r.name, demand, consumed);
+							// Any already consumed resouces are lost.
+							this.turnMeOffDueExhaustedResources(r.name);
+							return;
+						}
 					}
 					continue;
 				}
@@ -154,6 +161,13 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 					{
 						double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
 						energy *= (consumed/demand);
+						if (consumed < Lib.Physics.CUTOFF)
+						{
+							Log.dbg("{0}:OnFixedUpdate {1} NOT ENOUGH!: demand={2} ; consumed={3}", this.ID, r.name, demand, consumed);
+							// Any already consumed resouces are lost.
+							this.turnMeOffDueExhaustedResources(r.name);
+							return;
+						}
 						Log.dbg("{0}:OnFixedUpdate {1} demand={2} ; consumed={3} ; energy = {4}", this.ID, r.name, demand, consumed, energy);
 					}
 				}
@@ -208,6 +222,13 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 							;
 				}
 			}
+		}
+
+		private void turnMeOffDueExhaustedResources(string resName)
+		{
+			this.superChargerEnabled = false;
+			//Lib.UI.PostScreenWarning(Localizer.Format("#SOMETHING", this.vessel.vesselName, this.resources[i].name));
+			Lib.UI.PostScreenWarning(string.Format("Vessel {0} run out of {1}. Dissipataor Super Charger is disabled!", this.vessel.vesselName, resName));
 		}
 
 		private static new readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalHeatDissipatorSuperCharger>("L_Aerospace.Kerbal.HeatPump", "DissipatorSuperCharger", 0);

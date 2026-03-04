@@ -185,6 +185,13 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 					{ 
 						double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
 						energy *= consumed/demand;
+						if (consumed < Lib.Physics.CUTOFF)
+						{
+							Log.dbg("{0}:OnFixedUpdate {1} NOT ENOUGH!: demand={2} ; consumed={3}", this.ID, r.name, demand, consumed);
+							// Any already consumed resouces are lost.
+							this.turnMeOffDueExhaustedResources(r.name);
+							return;
+						}
 					}
 					continue;
 				}
@@ -193,6 +200,13 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 					double demand = r.ratio * (energyWeCanSink / maxEnergyTransfer) * thisResourceOnus;
 					if (demand < Lib.Physics.CUTOFF) continue;
 					double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
+					if (consumed < Lib.Physics.CUTOFF)
+					{
+						Log.dbg("{0}:OnFixedUpdate {1} NOT ENOUGH!: demand={2} ; consumed={3}", this.ID, r.name, demand, consumed);
+						// Any already consumed resouces are lost.
+						this.turnMeOffDueExhaustedResources(r.name);
+						return;
+					}
 					energy *= (consumed/demand) * thisResourceOnus;
 					Log.dbg("{0}:OnFixedUpdate {1}: demand={2} ; consumed={3} ; thisResourceOnus = {4} ; energy = {5}", this.ID, r.name, demand, consumed, thisResourceOnus, energy);
 				}
@@ -219,6 +233,13 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		}
 
 		#endregion
+
+		private void turnMeOffDueExhaustedResources(string resName)
+		{
+			this.heatExchangeEnabled = false;
+			//Lib.UI.PostScreenWarning(Localizer.Format("#SOMETHING", this.vessel.vesselName, this.resources[i].name));
+			Lib.UI.PostScreenWarning(string.Format("Vessel {0} run out of {1}. Heat Exchanger is disabled!", this.vessel.vesselName, resName));
+		}
 
 		private static new readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalHeatExchanger>("L_Aerospace.Kerbal.HeatPump", "Exchanger", 0);
 		protected override KSPe.Util.Log.Logger GetLogger() => Log;
