@@ -143,7 +143,32 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 			double energyWeWantToSink = energyCurrent - energyGoal;
 			Log.dbg("{0}:OnFixedUpdate energyWeWantToSink={1}", this.ID, energyWeWantToSink);
-			if (energyWeWantToSink < Lib.Physics.CUTOFF) return;
+			if (energyWeWantToSink < Lib.Physics.CUTOFF)
+			{	// Standby energy consuption.
+				for (int i = 0; i < this.resources.Length; ++i)
+				{
+					ResourceDef r = this.resources[i];
+
+					if (r.hspu < Lib.Physics.CUTOFF)
+					{
+						double demand = 0.01 * r.ratio * this.maxEnergyTransfer * TimeWarp.fixedDeltaTime; // 1% energy penalty.
+						if (demand > 0)
+						{ 
+							double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
+							if (consumed < Lib.Physics.CUTOFF)
+							{
+								Log.dbg("{0}:OnFixedUpdate (standby) {1} NOT ENOUGH!: demand={2} ; consumed={3}", this.ID, r.name, demand, consumed);
+								// Any already consumed resouces are lost.
+								this.turnMeOffDueExhaustedResources(r.name);
+								return;
+							}
+							Log.dbg("{0}:OnFixedUpdate (standby) {1}: demand={2} ; consumed={3}", this.ID, r.name, demand, consumed);
+						}
+						continue;
+					}
+				}
+				return;
+			}
 
 			double maxEnergyTransfer = this.maxEnergyTransfer * this.heatExchangeThresholdRatio;
 			double energyWeCanSink = Math.Min(energyWeWantToSink, maxEnergyTransfer);
