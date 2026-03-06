@@ -30,22 +30,24 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 		#region KSP Life Cycle
 
 		protected override void DoLoadVessel() => this.hardActive = Globals.Instance.KerbalCrewMass;
-		protected override void DoStart() => this.populate();
-		protected override void DoGoOnRails() => this.list.Clear();
 
-		protected override void DoGoOffRails()
-		{
-			this.populate();
-			this.Active = this.list.Count > 0;
-		}
-
+		protected override void DoStart() => this.nukeMe();
+		protected override void DoGoOnRails() => this.nukeMe();
+		protected override void DoGoOffRails() => this.populate();
 		protected override void DoVesselWasModified(Vessel vessel) => this.populate();
+		protected override void DoEditorShipModified(ShipConstruct data) => this.populate();
 
 		#endregion
 
-		private void populate()
+		private void nukeMe()
 		{
 			this.list.Clear(); // Better safer then sorrier.
+			this.Active = false;
+		}
+
+		private void populate()
+		{
+			this.nukeMe();
 			for (int i = 0; i < this.vessel.parts.Count; ++i)
 			{
 				Part p = this.vessel.parts[i];
@@ -53,6 +55,7 @@ namespace L_Aerospace { namespace Kerbal { namespace CrewMass
 				if (null == m) continue;
 				this.list.Add(m);
 			}
+			this.Active = this.list.Count > 0;
 		}
 
 		private static new readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<Controller>("L_Aerospace.Kerbal.CrewMass", "Controller", 0);

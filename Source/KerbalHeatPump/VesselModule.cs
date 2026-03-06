@@ -36,10 +36,10 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		protected override void DoStart() => this.populate();
 
 		protected override void DoGoOnRails() => this.nukeMe();
-		protected override void DoGoOffRails() => this.repopulate();
+		protected override void DoGoOffRails() => this.populate();
 
-		protected override void DoVesselWasModified(Vessel data) => this.repopulate();
-		protected override void DoEditorShipModified(ShipConstruct data) => this.repopulate();
+		protected override void DoVesselWasModified(Vessel data) => this.populate();
+		protected override void DoEditorShipModified(ShipConstruct data) => this.populate();
 
 		#endregion
 
@@ -141,11 +141,6 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			// Better safer then sorrier.
 			this.nukeMe();
-		}
-
-		private void repopulate()
-		{
-			this.populate();
 
 			int exchangers = 0;
 			int sinkers = 0;
