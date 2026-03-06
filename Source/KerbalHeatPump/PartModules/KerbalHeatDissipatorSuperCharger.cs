@@ -35,6 +35,9 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		[UI_FloatRange(scene = UI_Scene.All, minValue = 0.001f, maxValue = 1f, stepIncrement = 0.001f)]
 		public float superChargerThresholdRatio = 1f;
 
+		[KSPField (isPersistant = true, guiActive = false, guiActiveEditor = false)]
+		public double multiplier = 1d;
+
 		[KSPField (isPersistant = false, guiActive = false, guiActiveEditor = false, guiName = "Super Charger")]
 		public string status = "status";
 
@@ -156,7 +159,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 					for (int j = 0 ; j < l.Length ; ++j) if (l[j].intakeEnabled)
 						// Heat Conductivity increases 9.8% each 5m/s for Air.
 						// TODO: Parametrize this for different mediums, like atmos from other planets and water!
-						energy *= Lib.Math.GeometricProgression(l[j].airFlow * l[j].intakeSpeed, 1.098, (int)(l[j].intakeSpeed / 5));
+						energy *= this.multiplier * Lib.Math.GeometricProgression(l[j].airFlow * l[j].intakeSpeed, 1.098, (int)(l[j].intakeSpeed / 5));
 				}
 
 				energy *= TimeWarp.fixedDeltaTime;
