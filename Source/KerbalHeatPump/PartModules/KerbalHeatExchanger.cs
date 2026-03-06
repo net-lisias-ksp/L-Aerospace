@@ -215,9 +215,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			double energySunk = this.vesselModule.PumpHeat(energy);
 			if (double.IsNaN(energySunk))
 			{
-				this.heatExchangeEnabled = false;
-				//Lib.UI.PostScreenError(Localizer.Format("#SOMETHING");
-				Lib.UI.PostScreenWarning("No active Heat Sinks! Heat Exchanger is disabled!");
+				this.turnMeOffDueNoSkinkers();
 				Log.dbg("{0}:OnFixedUpdate {1}: No active Heat Sinks! Heat Exchanger is disabled!", this.ID);
 				return;
 			}
@@ -239,6 +237,13 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			this.heatExchangeEnabled = false;
 			//Lib.UI.PostScreenWarning(Localizer.Format("#SOMETHING", this.vessel.vesselName, this.resources[i].name));
 			Lib.UI.PostScreenWarning(string.Format("Vessel {0} run out of {1}. Heat Exchanger is disabled!", this.vessel.vesselName, resName));
+		}
+
+		private void turnMeOffDueNoSkinkers()
+		{
+			this.heatExchangeEnabled = false;
+			//Lib.UI.PostScreenError(Localizer.Format("#SOMETHING");
+			Lib.UI.PostScreenWarning("No active Heat Sinks! Heat Exchanger is disabled!");
 		}
 
 		private static new readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalHeatExchanger>("L_Aerospace.Kerbal.HeatPump", "Exchanger", 0);
