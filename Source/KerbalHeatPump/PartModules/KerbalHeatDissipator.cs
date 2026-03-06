@@ -197,12 +197,13 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			double stillMissingEnery = energyWeWantToDissipate - energyEffectivelySunk;
 			if (stillMissingEnery > 0)
 			{
-				double energy = this.vesselModule.WithdrawEnergy(stillMissingEnery, this);
+				double energy = this.vesselModule.WithdrawEnergy(Math.Min(maxEnergyTransfer-energyEffectivelySunk, stillMissingEnery), this);
 				this.part.thermalInternalFlux -= energy;
 				stillMissingEnery -= energy;
+				energyEffectivelySunk += energy;
 				Log.dbg("{0}:OnFixedUpdate withdrawnEnergy={1}", this.ID, energy);
 			}
-			Log.dbg("{0}:OnFixedUpdate stillMissingEnery={1} ; this.part.thermalInternalFlux = {2} ; this.part.temperature = {3} ; intakeResourceTemp = {4}", this.ID, stillMissingEnery, this.part.thermalInternalFlux, this.part.temperature, intakeResourceTemp);
+			Log.dbg("{0}:OnFixedUpdate energyEffectivelySunk = {1} ; stillMissingEnery={2} ; this.part.thermalInternalFlux = {3} ; this.part.temperature = {4} ; intakeResourceTemp = {5}", this.ID, energyEffectivelySunk, stillMissingEnery, this.part.thermalInternalFlux, this.part.temperature, intakeResourceTemp);
 		}
 
 		#endregion
