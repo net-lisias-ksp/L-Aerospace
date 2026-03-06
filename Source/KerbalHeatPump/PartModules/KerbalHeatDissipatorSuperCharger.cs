@@ -119,6 +119,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 			Log.dbg("{0}:DoFixedUpate {1} {2}", this.ID, null != this.part, null != this.part.Resources);
 
+			// Resources are processed in the order they are decined on the config node.
+			// Be sure to put resources with hsp=0 by last.
 			for (int i = 0; i < this.resources.Length; ++i)
 			{
 				ResourceDef r = this.resources[i];
@@ -130,9 +132,10 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 					{
 						double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
 						this.availableEnergy *= consumed/demand;
-						if (consumed < Lib.Physics.CUTOFF)
+						double diff = consumed-demand;
+						if (diff < -Lib.Physics.CUTOFF)
 						{
-							Log.dbg("{0}:OnFixedUpdate {1} NOT ENOUGH!: demand={2} ; consumed={3}", this.ID, r.name, demand, consumed);
+							Log.dbg("{0}:OnFixedUpdate {1} NOT ENOUGH! demand={2} ; consumed={3} ; diff = {4}", this.ID, r.name, demand, consumed, diff);
 							// Any already consumed resouces are lost.
 							this.turnMeOffDueExhaustedResources(r.name);
 							return;
@@ -142,7 +145,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				}
 
 				// Only the coolant in the part is accountable for thermal transfer! Heat Dissipators don't work remotely! :)
-				double energy = this.part.Resources.Get(r.id).amount * r.hspu;
+				double energy = this.part.Resources.Get(r.id).amount * r.hspuK;
 				if (this.intakes.ContainsKey(r))
 				{
 					ModuleResourceIntake[] l = this.intakes[r];
@@ -157,7 +160,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 				{
 					double demand = r.ratio * energy;
-					if (demand > Lib.Physics.CUTOFF)
+					if (demand > 0)
 					{
 						double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
 						energy *= (consumed/demand);
@@ -228,7 +231,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		{
 			this.superChargerEnabled = false;
 			//Lib.UI.PostScreenWarning(Localizer.Format("#SOMETHING", this.vessel.vesselName, this.resources[i].name));
-			Lib.UI.PostScreenWarning(string.Format("Vessel {0} run out of {1}. Dissipataor Super Charger is disabled!", this.vessel.vesselName, resName));
+			Lib.UI.PostScreenWarning(string.Format("Vessel {0} run out of {1}. Dissipator Super Charger is disabled!", this.vessel.vesselName, resName));
 		}
 
 		private static new readonly KSPe.Util.Log.Logger Log = KSPe.Util.Log.Logger.CreateForType<KerbalHeatDissipatorSuperCharger>("L_Aerospace.Kerbal.HeatPump", "DissipatorSuperCharger", 0);

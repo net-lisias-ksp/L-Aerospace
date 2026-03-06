@@ -151,7 +151,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			// Only the coolant in the part is accountable for thermal transfer!
 			double energyAvailable = 0;
 			for (int i = 0; i < this.resources.Length; ++i)
-				energyAvailable += this.resources[i].hspu * this.part.Resources.Get(resources[i].id).amount;
+				energyAvailable += this.resources[i].hspuK * this.part.Resources.Get(resources[i].id).amount;
 			if (energyAvailable < Lib.Physics.CUTOFF)
 			{
 				Log.dbg("{0}:OnFixedUpdate NOT ENOUGH OUT OF COOLANTS!", this.ID);
@@ -164,40 +164,44 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 			// Now we need to cope with the event in which want to pump out more energy than we have in the budget (due lack of coolant)
 			// We "salvage" the situation by stressing the cooland pumps to make them flow faster into the dissipator.
-			// We calculate that onus by merely dividing thethe energy we want to ditch by the energy budget. The onus is a multipier
-			// to be applied on the resources with HSP = 0.
+			// We calculate that onus by merely dividing the energy we want to ditch by the energy budget. The onus is a multipier
+			// to be applied as some kind of penalty depending of the resource.
 			// Note: both values are guaranteed not to be zero at this point.
 			double resourceOnus = energyWeCanSink / energyAvailable;
 
-			Log.dbg("{0}:OnFixedUpdate energyWeWantToSink={1} ; energyWeCanSink={2} ; energyAvailable={3} ; maxEnergyTransfer {4}", this.ID, energyWeWantToSink, energyWeCanSink, energyAvailable, maxEnergyTransfer);
+			Log.dbg("{0}:OnFixedUpdate energyWeWantToSink={1} ; energyWeCanSink={2} ; energyAvailable={3} ; maxEnergyTransfer {4} ; resourceOnus = {5}", this.ID, energyWeWantToSink, energyWeCanSink, energyAvailable, maxEnergyTransfer, resourceOnus);
 
-			double energy = Math.Min(energyWeCanSink, energyAvailable) * TimeWarp.fixedDeltaTime;
+			// From this point, we want to work on the timeslice KSP is running.
+			double energy = energyWeCanSink *= TimeWarp.fixedDeltaTime;
+			maxEnergyTransfer *= TimeWarp.fixedDeltaTime;
 			for (int i = 0; i < this.resources.Length; ++i)
 			{
 				ResourceDef r = this.resources[i];
-				double thisResourceOnus = 1;
 
 				if (r.hspu < Lib.Physics.CUTOFF)
 				{
-					thisResourceOnus = Math.Max(1, resourceOnus);
+					// https://www.desmos.com/calculator : y=a\log_{1.5}\left(x-h\right)+k
+					double thisResourceOnus = Math.Max(1, 0.5 * (0.3 * Math.Log(resourceOnus - -4.06, 1.5) + -0.2));
 					double demand = r.ratio * Math.Min(maxEnergyTransfer, energy) * thisResourceOnus;
 					if (demand > Lib.Physics.CUTOFF)
 					{ 
 						double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
 						energy *= consumed/demand;
-						if (consumed < Lib.Physics.CUTOFF)
+						double diff = consumed-demand;
+						if (diff < -Lib.Physics.CUTOFF)
 						{
-							Log.dbg("{0}:OnFixedUpdate {1} NOT ENOUGH!: demand={2} ; consumed={3}", this.ID, r.name, demand, consumed);
+							Log.dbg("{0}:OnFixedUpdate {1} NOT ENOUGH! demand={2} ; consumed={3} ; diff = {4} ; thisResourceOnus = {5}", this.ID, r.name, demand, consumed, diff, thisResourceOnus);
 							// Any already consumed resouces are lost.
 							this.turnMeOffDueExhaustedResources(r.name);
 							return;
 						}
+						Log.dbg("{0}:OnFixedUpdate {1}: demand={2} ; consumed={3} ; diff = {4} ; energy = {5} ; thisResourceOnus = {6}", this.ID, r.name, demand, consumed, diff, energy, thisResourceOnus);
 					}
 					continue;
 				}
 
 				{
-					double demand = r.ratio * (energyWeCanSink / maxEnergyTransfer) * thisResourceOnus;
+					double demand = r.ratio * (energyWeCanSink / maxEnergyTransfer);
 					if (demand < Lib.Physics.CUTOFF) continue;
 					double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
 					if (consumed < Lib.Physics.CUTOFF)
@@ -207,8 +211,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 						this.turnMeOffDueExhaustedResources(r.name);
 						return;
 					}
-					energy *= (consumed/demand) * thisResourceOnus;
-					Log.dbg("{0}:OnFixedUpdate {1}: demand={2} ; consumed={3} ; thisResourceOnus = {4} ; energy = {5}", this.ID, r.name, demand, consumed, thisResourceOnus, energy);
+					energy *= (consumed/demand);
+					Log.dbg("{0}:OnFixedUpdate {1}: demand={2} ; consumed={3} ; energy = {4} ; resourceOnus = {5}", this.ID, r.name, demand, consumed, energy, resourceOnus);
 				}
 			}
 

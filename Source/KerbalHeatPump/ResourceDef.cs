@@ -33,6 +33,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		internal PartResourceDefinition def;
 		internal readonly double hspu;	// Joules per Unit per °K
+		internal readonly double hspuK;	// Joules per Unit per °K in kiloJoules (to optimize a bit calculations)
 		internal readonly double hsp;	// Joules per Kg per °K
 		internal readonly double ratio;	// How many units (consuption) consumed per Unit
 
@@ -50,6 +51,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 			this.hsp = 1000 * r.density * r.specificHeatCapacity; // HSP per kG, not per U.
 			this.hspu = r.specificHeatCapacity; // HSP per U, not per kG.
+			this.hspuK = this.hspu / 1000;
 			this.ratio = consuption / autonomy;
 
 			Log.dbg("{0} {1} {2} {3} {4} {5}", this.id, this.name, this.consuption, this.hsp, this.hspu, this.ratio);

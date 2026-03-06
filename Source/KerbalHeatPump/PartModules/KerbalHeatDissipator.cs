@@ -161,7 +161,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				}
 
 				// Only the coolant in the part is accountable for thermal transfer! Heat Dissipators don't work remotely! :)
-				double energy = this.part.Resources.Get(r.id).amount * r.hspu;
+				double energy = this.part.Resources.Get(r.id).amount * r.hspuK;
 				double coollantThresholdRatio = this.coollantThresholdRatio;
 				if (this.intakes.ContainsKey(r))
 				{
@@ -176,14 +176,12 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				energy *= TimeWarp.fixedDeltaTime;
 				energy = Math.Min(energyWeWantToDissipate, energy);
 
-				energy += this.vesselModule.WithdrawEnergy(energy, this);
-
 				Log.dbg("{0}:OnFixedUpdate {1} energyWeWantToDissipate={2} ; energy={3} ; maxEnergyTransfer={4}", this.ID, r.name, energyWeWantToDissipate, energy, maxEnergyTransfer);
 
 				{
 					double demand = r.ratio * Math.Min(coollantThresholdRatio, energyWeWantToDissipate / maxEnergyTransfer);
 					energy *= TimeWarp.fixedDeltaTime;
-					if (demand > Lib.Physics.CUTOFF)
+					if (demand > 0)
 					{
 						double consumed = this.part.RequestResource(r.id, demand, r.def.resourceFlowMode);
 						energy *= (consumed/demand);
@@ -196,13 +194,15 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				if (energyWeWantToDissipate < Lib.Physics.CUTOFF) break;
 			}
 			this.part.thermalInternalFlux -= energyEffectivelySunk;
+			double stillMissingEnery = energyWeWantToDissipate - energyEffectivelySunk;
+			if (stillMissingEnery > 0)
 			{
-				double energy = this.vesselModule.WithdrawEnergy(energyWeWantToDissipate, this);
+				double energy = this.vesselModule.WithdrawEnergy(stillMissingEnery, this);
 				this.part.thermalInternalFlux -= energy;
-				energyWeWantToDissipate -= energy;
+				stillMissingEnery -= energy;
 				Log.dbg("{0}:OnFixedUpdate withdrawnEnergy={1}", this.ID, energy);
 			}
-			Log.dbg("{0}:OnFixedUpdate enegyNotDissipated={1} ; this.part.thermalInternalFlux = {2} ; this.part.temperature = {3} ; intakeResourceTemp = {4}", this.ID, energyWeWantToDissipate, this.part.thermalInternalFlux, this.part.temperature, intakeResourceTemp);
+			Log.dbg("{0}:OnFixedUpdate stillMissingEnery={1} ; this.part.thermalInternalFlux = {2} ; this.part.temperature = {3} ; intakeResourceTemp = {4}", this.ID, stillMissingEnery, this.part.thermalInternalFlux, this.part.temperature, intakeResourceTemp);
 		}
 
 		#endregion
