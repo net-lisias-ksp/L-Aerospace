@@ -31,6 +31,10 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		[UI_Toggle (disabledText = "#autoLOC_900890", scene = UI_Scene.All, enabledText = "#autoLOC_900889", affectSymCounterparts = UI_Scene.All)]
 		public bool superChargerEnabled = false;
 
+		[KSPField( isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Super Charger THR", guiFormat = "P1")]
+		[UI_FloatRange(scene = UI_Scene.All, minValue = 0.001f, maxValue = 1f, stepIncrement = 0.001f)]
+		public float superChargerThresholdRatio = 1f;
+
 		[KSPField (isPersistant = false, guiActive = false, guiActiveEditor = false, guiName = "Super Charger")]
 		public string status = "status";
 
@@ -145,7 +149,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				}
 
 				// Only the coolant in the part is accountable for thermal transfer! Heat Dissipators don't work remotely! :)
-				double energy = this.part.Resources.Get(r.id).amount * r.hspuK;
+				double energy = this.part.Resources.Get(r.id).amount * r.hspuK * this.superChargerThresholdRatio;
 				if (this.intakes.ContainsKey(r))
 				{
 					ModuleResourceIntake[] l = this.intakes[r];
