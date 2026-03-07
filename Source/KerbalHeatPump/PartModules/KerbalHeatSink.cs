@@ -28,13 +28,22 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		[KSPField (isPersistant = true)]
 		protected double maxEnergyTransfer = 7500;
 
+		[KSPField (isPersistant = false, guiActive = false, guiActiveEditor = false, guiName = "partTempStatus")]
+		private string partTempStatus = "";
+
 		private Controller vesselModule;
+		private bool foundDissipator;
 
 		#region KSP Life Cycle
 
 		protected override void DoAwake()
 		{
 			this.hardActive = Globals.Instance.KerbalHeatPump;
+			this.foundDissipator = null != this.part.FindModuleImplementing<KerbalHeatDissipator>();
+			{
+				BaseField field = Fields["partTempStatus"];
+				field.guiActive = field.guiActiveEditor = HighLogic.LoadedSceneIsFlight && this.foundDissipator;
+			}
 		}
 
 		protected override void DoEditorPartEvent(ConstructionEventType eventType, Part part) { }
@@ -70,7 +79,11 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 			return r;
 		}
 
-		protected override void DoUpdate() { }
+		protected override void DoUpdate()
+		{
+			this.partTempStatus = Lib.UI.Format(this.part.temperature, 0, "°K");
+		}
+
 		protected override void DoFixedUpdate() { }
 
 		#endregion

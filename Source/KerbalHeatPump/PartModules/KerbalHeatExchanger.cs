@@ -28,8 +28,8 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 		[UI_Toggle (disabledText = "#autoLOC_900890", scene = UI_Scene.All, enabledText = "#autoLOC_900889", affectSymCounterparts = UI_Scene.All)]
 		public bool heatExchangeEnabled = false;
 
-		[KSPField (isPersistant = false, guiActive = false, guiActiveEditor = false, guiName = "Cabin Temperature")]
-		public string cabinTempStatus = "";
+		[KSPField (isPersistant = false, guiActive = false, guiActiveEditor = false, guiName = "Internal Temperature")]
+		private string partTempStatus = "";
 
 		[KSPField( isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Heat EXCH THR", guiFormat = "P1")]
 		[UI_FloatRange(scene = UI_Scene.All, minValue = 0.001f, maxValue = 1f, stepIncrement = 0.001f)]
@@ -52,8 +52,9 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 				//UI_FloatRange range = (UI_FloatRange)field.uiControlEditor;
 			}
 			{
-				BaseField field = Fields["cabinTempStatus"];
+				BaseField field = Fields["partTempStatus"];
 				field.guiActive = field.guiActiveEditor = HighLogic.LoadedSceneIsFlight;
+				field.guiName = this.part.CrewCapacity > 0 ? "Cabin Temperature" : "Internal Temperature";
 			}
 		}
 
@@ -126,7 +127,7 @@ namespace L_Aerospace { namespace Kerbal { namespace HeatPump
 
 		protected override void DoUpdate()
 		{
-			this.cabinTempStatus = Lib.UI.Format(this.part.temperature, 0, "°K");
+			this.partTempStatus = Lib.UI.Format(this.part.temperature, 0, "°K");
 		}
 
 		protected override void DoFixedUpdate()
